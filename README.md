@@ -1,4 +1,4 @@
-# SDL2 Game Project
+# Meowstro - SDL2 Game Project
 
 ## Overview
 This is a game project using SDL2 and its related libraries. The project is configured using CMake and follows a structured build process to make it easy for developers to set up and contribute.
@@ -9,9 +9,8 @@ This is a game project using SDL2 and its related libraries. The project is conf
 
 ## Prerequisites
 Before setting up the project, ensure you have the following installed:
-- **CMake** (minimum version 3.10)
 - **Visual Studio 2022** (or any C++ compiler supporting C++17)
-- **SDL2** (along with SDL2_image, SDL2_mixer, and SDL2_ttf)
+- **[CMake](https://cmake.org/download/)** (minimum version 3.10 | I recommend not getting  )
 
 ## Setup Instructions
 
@@ -116,7 +115,7 @@ cmake --build .
 ```
 
 ## Contribution Guidelines
-- **DO NOT** commit `config.json` or `CMakePresets.json`. These files contain personal paths and should remain local.
+- **DON'T** commit `config.json` or `CMakePresets.json`. These files contain personal paths should be local.
 - If modifying build configuration, ensure compatibility with Windows.
 - Follow C++ best practices and maintain code clarity.
 
