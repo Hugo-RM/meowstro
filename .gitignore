@@ -1,0 +1,14 @@
+# Ignore CMake build directory
+build/
+
+# Ignore Visual Studio Code settings and workspace files
+.vscode/
+
+# Ignore configuration files that contain user-specific paths
+config.json
+CMakePresets.json
+
+# Ignore log files and system files
+*.log
+*.tmp
+*.swp
