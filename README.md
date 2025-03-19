@@ -10,7 +10,7 @@ This is a game project using SDL2 and its related libraries. The project is conf
 ## Prerequisites
 Before setting up the project, ensure you have the following installed:
 - **Visual Studio 2022** (or any C++ compiler supporting C++17)
-- **[CMake](https://cmake.org/download/)** (minimum version 3.10 | I recommend not getting  )
+- **[CMake](https://cmake.org/download/)** (minimum version 3.10 | I recommend not getting the Release Candidate)
 
 ## Setup Instructions
 
@@ -89,12 +89,6 @@ cmake --build .
 │   │-- fonts/             # Font files
 │   │-- images/            # Image files
 │-- build/                 # CMake build files (includes build/bin/Debug)
-│-- cmake/                 # CMake configuration files
-│   │-- sdl2/              # SDL2 CMake scripts
-│   │   │-- FindSDL2.cmake
-│   │   │-- FindSDL2_image.cmake
-│   │   │-- FindSDL2_mixer.cmake
-│   │   │-- FindSDL2_ttf.cmake
 │-- docs/                  # Project documentation
 │   │-- API_documentation.md
 │   │-- design_notes.md
