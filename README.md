@@ -81,20 +81,28 @@ set(HEADERS
 ```
 
 ### 4. Build the Project
-Navigate to the project root and run the following commands:
+You have two common ways to build and run the project: **Visual Studio** or the **Command Line**.
 
-#### Configure CMake
-```sh
-cmake --preset my-build
-```
-(`cmake --preset my-build` will create a `build/` directory automatically)
+---
+
+#### 🔷 Method 1: Using Visual Studio
+
+1. Open the `.sln` file located inside the `build/` directory.
+2. In the **Solution Explorer**, right-click on the project named `game` and select **"Set as Startup Project"**.
+3. Press `Ctrl + F5` or click **Debug → Start Without Debugging** to run the project.
+
+✅ That’s it! Visual Studio will automatically build and run the project.
+
+---
+
+#### ⚙️ Method 2: Using Command Line
+
+Make sure you're in the root of the project and then run the following:
 
 #### Change to the Build Directory
 ```sh
 cd "./build"
 ```
-
-In the build directory run:
 
 #### Build the Project
 ```sh
