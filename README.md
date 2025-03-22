@@ -49,7 +49,7 @@ python generate_cmake_presets.py
 ```
 
 ### 3. Creating files (skip if you're not creating new file)
-Depending on the method you used to create a new file, you will need to somehow get that file to the src or include directories.
+Depending on the method you used to create a new file, you will need to somehow get that file to the src or include directories. They will probably be directly under the ./build directory if you're already using visual studio. If not just locate the file(s) and cut and paste them to the correct place.
 
 If you used add class or new item in visual studio, you will need to simply cut and paste the files into the right folder (include being .hpp files, src being .cpp files).
 
