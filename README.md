@@ -48,7 +48,35 @@ The Python File `generate_cmake_presets.py` can be run with the following comman
 python generate_cmake_presets.py
 ```
 
-### 3. Build the Project
+### 3. Creating files (skip if you're not creating new file)
+Depending on the method you used to create a new file, you will need to somehow get that file to the src or include directories.
+
+If you used add class or new item in visual studio, you will need to simply cut and paste the files into the right folder (include being .hpp files, src being .cpp files).
+
+You can also just create the files in the src and include files then build the project to have them there.
+
+After the files are in the src and include folders, you will need to add them into the `CMakeLists.txt`. You will scroll down to see the following
+
+```txt
+# Define Source Files
+set(SOURCES
+    src/file_1.cpp
+    src/file_2.cpp
+    ...
+    src/file_X.cpp
+)
+# ... means that there can be more files between them
+# Define Header Files
+set(HEADERS
+    include/file_1.hpp
+    ...
+    include/file_x.cpp
+)
+```
+
+Just add the filename(s) to this part of the `CMakeLists.txt` and build the project for it to work :).
+
+### 4. Build the Project
 Navigate to the project root and run the following commands:
 
 #### Configure CMake
