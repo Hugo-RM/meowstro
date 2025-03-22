@@ -78,6 +78,7 @@ set(HEADERS
     ...
     include/file_X.hpp
 )
+```
 
 ### 4. Build the Project
 Navigate to the project root and run the following commands:
