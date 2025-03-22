@@ -48,16 +48,22 @@ The Python File `generate_cmake_presets.py` can be run with the following comman
 python generate_cmake_presets.py
 ```
 
-### 3. Creating files (skip if you're not creating new file)
-Depending on the method you used to create a new file, you will need to somehow get that file to the src or include directories. They will probably be directly under the ./build directory if you're already using visual studio. If not just locate the file(s) and cut and paste them to the correct place.
+### 3. Creating Files (Skip if You're Not Creating a New File)
 
-If you used add class or new item in visual studio, you will need to simply cut and paste the files into the right folder (include being .hpp files, src being .cpp files).
+> ⚠️ **IMPORTANT: YOU MUST DO THIS EVERY TIME YOU CREATE A NEW `.cpp` OR `.hpp` FILE.**  
+> If you don’t do this, the file will not be included in the project build. You must also rebuild the project after adding new files.
 
-You can also just create the files in the src and include files then build the project to have them there.
+Depending on how you created your new file, you may need to manually move it to the correct directory. Visual Studio, for example, might place new files inside the `./build` directory.
 
-After the files are in the src and include folders, you will need to add them into the `CMakeLists.txt`. You will scroll down to see the following
+If you used **Add Class** or **New Item** in Visual Studio:
+- Move the generated `.cpp` files to the `src/` directory.
+- Move the generated `.hpp` files to the `include/` directory.
 
-```txt
+Alternatively, you can just **create the files directly inside the `src/` and `include/` folders** before building.
+
+After the files are correctly placed, you must update the `CMakeLists.txt` file so that they are included in the build:
+
+```cmake
 # Define Source Files
 set(SOURCES
     src/file_1.cpp
@@ -65,16 +71,13 @@ set(SOURCES
     ...
     src/file_X.cpp
 )
-# ... means that there can be more files between them
+
 # Define Header Files
 set(HEADERS
     include/file_1.hpp
     ...
-    include/file_x.cpp
+    include/file_X.hpp
 )
-```
-
-Just add the filename(s) to this part of the `CMakeLists.txt` and build the project for it to work :).
 
 ### 4. Build the Project
 Navigate to the project root and run the following commands:
