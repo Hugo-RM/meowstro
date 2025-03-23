@@ -88,7 +88,7 @@ You have two common ways to build and run the project: **Visual Studio** or the 
 #### 🔷 Method 1: Using Visual Studio
 
 1. Open the `.sln` file located inside the `build/` directory.
-2. In the **Solution Explorer**, right-click on the project named `game` and select **"Set as Startup Project"**.
+2. In the **Solution Explorer**, right-click on the project named `meowstro` and select **"Set as Startup Project"**.
 3. Press `Ctrl + F5` or click **Debug → Start Without Debugging** to run the project.
 
 ✅ That’s it! Visual Studio will automatically build and run the project.
@@ -111,7 +111,7 @@ cmake --build .
 
 #### Run the Built Executable
 ```sh
-./bin/Debug/game.exe
+./bin/Debug/meowstro.exe
 ```
 
 ## Directory Structure

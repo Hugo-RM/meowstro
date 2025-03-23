@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(game-test VERSION 1.0.0)
+project(Meowstro VERSION 1.0.0)
 
 # Set C++ Standard
 set(CMAKE_CXX_STANDARD 17)
@@ -49,7 +49,7 @@ endif()
 
 # Define Source Files
 set(SOURCES
-    src/game.cpp
+    src/meowstro.cpp
     src/RenderWindow.cpp
     src/Entity.cpp
 )
@@ -66,7 +66,7 @@ if (NOT SOURCES)
 endif()
 
 # Create the Executable
-set(BIN_NAME game)
+set(BIN_NAME meowstro)
 if(DEFINED ENV{GITHUB_ACTIONS})
     add_definitions(-DCI_BUILD)
 endif()
