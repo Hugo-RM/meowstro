@@ -84,4 +84,4 @@ jobs:
       - name: Run Executable (Optional)
         working-directory: build/bin/Debug
         run: |
-          ./game.exe
+          ./meowstro.exe
