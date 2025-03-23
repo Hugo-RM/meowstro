@@ -124,6 +124,7 @@ cmake --build .
 │   │-- workflows/         # GitHub Actions workflows
 │   │   │-- build.yml      # Workflow for building the project
 │   │-- PULL_REQUEST_TEMPLATE.md # Pull request guidelines
+|-- aseperite-imgs # Aseperite files to modify image assets
 │-- assets/                # Game assets (textures, sounds, etc.)
 │   │-- audio/             # Audio files
 │   │-- fonts/             # Font files
