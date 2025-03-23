@@ -1,30 +1,46 @@
 #include <iostream>
+#include <string>
 #include "RenderWindow.hpp"
 #include "Entity.hpp"
 
-int main(int argc, char* args[])
+int main(int argc, char *args[])
 {
 	if (SDL_Init(SDL_INIT_VIDEO) > 0)
 		std::cout << "SDL_Init has failed, SDL ERROR: " << SDL_GetError();
 	if (!(IMG_Init(IMG_INIT_PNG)))
 		std::cout << "IMG_Init has failed, SDL ERROR: " << SDL_GetError();
 	
-	RenderWindow window("GAME v1.0", 1080, 600);
+	RenderWindow window("GAME v1.0", 1280, 720);
 	
-	const char *assetPath = "../assets/";
-	// CHANGE FILEPATH FOR TEXTURE LOADER
-	SDL_Texture* grassTexture = window.loadTexture((std::string(assetPath) + "images/ground_grass_1.png").c_str());
-
-	Entity entities[3] = { Entity(0, 568,grassTexture),
-						   Entity(32,568,grassTexture),
-						   Entity(64,568,grassTexture) };
-
-	#ifdef CI_BUILD
-    SDL_Delay(5000);
-    SDL_Quit();
-    return 0;
-    #endif
+#ifdef CI_BUILD
+	SDL_Delay(5000);
+	SDL_Quit();
+	return 0;
+#endif
 	
+	const int NUM_FISH_TEXTURES = 9;
+	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
+
+	fishTextures[0] = window.loadTexture("../assets/images/blue-fish/fish-1.png");
+	fishTextures[1] = window.loadTexture("../assets/images/blue-fish/fish-2.png");
+	fishTextures[2] = window.loadTexture("../assets/images/blue-fish/fish-3.png");
+	fishTextures[3] = window.loadTexture("../assets/images/green-fish/fish-1.png");
+	fishTextures[4] = window.loadTexture("../assets/images/green-fish/fish-2.png");
+	fishTextures[5] = window.loadTexture("../assets/images/green-fish/fish-3.png");
+	fishTextures[6] = window.loadTexture("../assets/images/gold-fish/fish-1.png");
+	fishTextures[7] = window.loadTexture("../assets/images/gold-fish/fish-2.png");
+	fishTextures[8] = window.loadTexture("../assets/images/gold-fish/fish-3.png");
+
+	Entity fishEntities[8] = { Entity(180, 570, fishTextures[0]),
+							   Entity(408, 570, fishTextures[1]),
+							   Entity(636, 570, fishTextures[2]),
+							   Entity(864, 570, fishTextures[3]),
+							   Entity(1092, 570, fishTextures[4]),
+							   Entity(1092, 410, fishTextures[5]),
+							   Entity(1092, 250, fishTextures[6]),
+							   Entity(1092, 90, fishTextures[7]) };
+
+
 	bool gameRunning = true;
 
 	SDL_Event event;
@@ -39,10 +55,12 @@ int main(int argc, char* args[])
 			}
 		}
 		window.clear();
-		for (int i = 0; i < 3; i++)
+		// window.render(background);
+		for (int i = 0; i < 8; i++)
 		{
-			window.render(entities[i]);
+			window.render(fishEntities[i]);
 		}
+		
 		window.display();
 	}
 

@@ -2,7 +2,7 @@
 #include "RenderWindow.hpp"
 
 
-RenderWindow::RenderWindow(const char* title, int w, int h) : window(NULL), renderer(NULL)
+RenderWindow::RenderWindow(const char *title, int w, int h) : window(NULL), renderer(NULL)
 {
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_SHOWN);
 	if (window == NULL)
@@ -13,9 +13,9 @@ RenderWindow::RenderWindow(const char* title, int w, int h) : window(NULL), rend
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-SDL_Texture* RenderWindow::loadTexture(const char* filePath)
+SDL_Texture *RenderWindow::loadTexture(const char *filePath)
 {
-	SDL_Texture* texture = NULL;
+	SDL_Texture *texture = NULL;
 	texture = IMG_LoadTexture(renderer, filePath);
 
 	if (texture == NULL)

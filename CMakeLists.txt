@@ -92,9 +92,6 @@ add_custom_command(TARGET ${BIN_NAME} POST_BUILD
         "$<TARGET_FILE_DIR:${BIN_NAME}>"
 )
 
-# Copy assets (res/ directory) to the output bin folder
-file(COPY assets DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-
 # Explicitly tell Visual Studio that headers belong to the project
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
