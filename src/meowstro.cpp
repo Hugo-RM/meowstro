@@ -1,5 +1,7 @@
 #include <iostream>
+#include <Windows.h>
 #include <string>
+#include <SDL_ttf.h>
 #include "RenderWindow.hpp"
 #include "Entity.hpp"
 
@@ -9,8 +11,17 @@ int main(int argc, char *args[])
 		std::cout << "SDL_Init has failed, SDL ERROR: " << SDL_GetError();
 	if (!(IMG_Init(IMG_INIT_PNG)))
 		std::cout << "IMG_Init has failed, SDL ERROR: " << SDL_GetError();
-	
-	RenderWindow window("GAME v1.0", 1280, 720);
+
+	SetProcessDPIAware();
+	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
+
+	int nativeWidth = GetSystemMetrics(SM_CXSCREEN);
+	int nativeHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	int windowWidth = nativeWidth * 0.9;
+	int windowHeight = nativeHeight * 0.9;
+
+	RenderWindow window("Meowstro v1.0", windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	
 #ifdef CI_BUILD
 	SDL_Delay(5000);
@@ -40,7 +51,6 @@ int main(int argc, char *args[])
 							   Entity(1092, 250, fishTextures[6]),
 							   Entity(1092, 90, fishTextures[7]) };
 
-
 	bool gameRunning = true;
 
 	SDL_Event event;
@@ -49,9 +59,18 @@ int main(int argc, char *args[])
 	{
 		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT)
+			switch(event.type)
 			{
+			case SDL_QUIT:
 				gameRunning = false;
+				break;
+			case SDL_KEYDOWN:
+				switch (event.key.keysym.sym)
+				{
+				case SDLK_ESCAPE:
+					gameRunning = false;
+					break;
+				}
 			}
 		}
 		window.clear();
@@ -60,12 +79,13 @@ int main(int argc, char *args[])
 		{
 			window.render(fishEntities[i]);
 		}
-		
+
 		window.display();
 	}
 
 	window.~RenderWindow();
 	SDL_Quit();
+
 
 	return 0;
 }
