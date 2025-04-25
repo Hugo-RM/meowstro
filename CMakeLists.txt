@@ -52,12 +52,13 @@ set(SOURCES
     src/game.cpp
     src/RenderWindow.cpp
     src/Entity.cpp
-)
+    src/Audio.cpp
 
 # Define Header Files
 set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
+    include/Audio.hpp
 )
 
 # Ensure at least one source file exists
