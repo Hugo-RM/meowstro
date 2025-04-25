@@ -81,6 +81,14 @@ set(HEADERS
 ```
 
 ### 4. Build the Project
+
+First you will want to configure the CMake after configuring files 
+
+#### Creates the Make File
+```sh
+cmake --preset my-build
+```
+
 You have two common ways to build and run the project: **Visual Studio** or the **Command Line**.
 
 ---
@@ -102,11 +110,6 @@ Make sure you're in the root of the project and then run the following:
 #### Change to the Build Directory
 ```sh
 cd "./build"
-```
-
-#### Creates the Make File
-```sh
-cmake ..
 ```
 
 #### Build the Project
