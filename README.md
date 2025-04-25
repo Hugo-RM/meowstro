@@ -104,6 +104,11 @@ Make sure you're in the root of the project and then run the following:
 cd "./build"
 ```
 
+#### Creates the Make File
+```sh
+cmake ..
+```
+
 #### Build the Project
 ```sh
 cmake --build .
