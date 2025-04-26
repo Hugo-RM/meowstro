@@ -1,49 +1,38 @@
 #include "Audio.hpp"
+#include <string>
 #include <iostream>
+
+
 Audio::Audio() {
-	myaudio_name = "";
+    if (SDL_Init(SDL_INIT_AUDIO) < 0) {
+        std::cerr << "Failed to initialize SDL audio: " << SDL_GetError() << std::endl;
+        return;
+    }
+
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
+        return;
+    }
+
+  /*  Mix_AllocateChannels(16);*/ // Optional: Set up channels
 }
-Audio::Audio(std::string myaudio_name) {
-	this->myaudio_name = myaudio_name;
+Audio::~Audio() {
+    Mix_CloseAudio();
+    SDL_Quit();
 }
-int Audio::AudioPlayer(std::string path_of_audio) {
-	if (SDL_Init(SDL_INIT_AUDIO) < 0) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL initialization failed: %s\n", SDL_GetError());
-		return 1;
-	}
+void Audio::playBackgroundMusic(const std::string& filePath) {
+    Mix_Music* bgMusic = Mix_LoadMUS(filePath.c_str());
+    if (!bgMusic) {
+        std::cerr << "Failed to load music file: " << Mix_GetError() << std::endl;
+        return;
+    }
 
-	if (Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "SDL_mixer initialization failed: %s\n", Mix_GetError());
-		//SDL_Quit();
-		return 1;
-	}
-
-	Mix_Music* music = Mix_LoadMUS(path_of_audio.c_str()); // Replace with your music file
-	if (music == nullptr) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to load music: %s\n", Mix_GetError());
-		Mix_Quit();
-		//SDL_Quit();
-		return 1;
-	}
-
-	std::cout << "Playing music..." << std::endl;
-	if (Mix_PlayMusic(music, -1) == -1) {
-		SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to play music: %s\n", Mix_GetError());
-		Mix_FreeMusic(music);
-		Mix_Quit();
-		//SDL_Quit();
-		return 1;
-	}
-
-	// Keep the program running for a while (replace with your game loop or main program logic)
-	SDL_Delay(210000); // Play for 10 seconds
-
-	//std::cout << "Fading out music..." << std::endl;
-	//Mix_FadeOutMusic(2000);
-	//SDL_Delay(2000); // Wait for the fade out
-
-	Mix_FreeMusic(music);
-	Mix_Quit();
-	//SDL_Quit();
-	return 0;
+    if (Mix_PlayMusic(bgMusic, -1) < 0) {
+        std::cerr << "Failed to play music: " << Mix_GetError() << std::endl;
+        Mix_FreeMusic(bgMusic);
+        return;
+    }
+}
+void Audio::stopBackgroundMusic() {
+    Mix_HaltMusic();
 }
