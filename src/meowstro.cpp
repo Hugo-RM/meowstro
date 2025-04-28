@@ -6,7 +6,6 @@
 #include "Entity.hpp"
 #include "Audio.hpp"
 
-
 int main(int argc, char *args[])
 {
 	if (SDL_Init(SDL_INIT_VIDEO) > 0)
