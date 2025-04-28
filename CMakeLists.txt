@@ -53,6 +53,7 @@ set(SOURCES
     src/RenderWindow.cpp
     src/Entity.cpp
     src/Audio.cpp
+)
 
 # Define Header Files
 set(HEADERS
