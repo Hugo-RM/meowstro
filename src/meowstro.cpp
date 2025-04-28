@@ -4,7 +4,7 @@
 #include <SDL_ttf.h>
 #include "RenderWindow.hpp"
 #include "Entity.hpp"
-#include "Audio.hpp
+#include "Audio.hpp"
 
 int main(int argc, char *args[])
 {
