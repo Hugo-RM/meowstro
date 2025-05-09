@@ -1,7 +1,6 @@
 #include <iostream>
-#include <Windows.h>
+//#include <Windows.h>
 #include <string>
-#include <SDL_ttf.h>
 #include "RenderWindow.hpp"
 #include "Entity.hpp"
 #include "Audio.hpp"
@@ -13,16 +12,11 @@ int main(int argc, char *args[])
 	if (!(IMG_Init(IMG_INIT_PNG)))
 		std::cout << "IMG_Init has failed, SDL ERROR: " << SDL_GetError();
 
-	SetProcessDPIAware();
-	SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
-
-	int nativeWidth = GetSystemMetrics(SM_CXSCREEN);
-	int nativeHeight = GetSystemMetrics(SM_CYSCREEN);
-
-	int windowWidth = nativeWidth * 0.9;
-	int windowHeight = nativeHeight * 0.9;
-
-	RenderWindow window("Meowstro v1.0", windowWidth, windowHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	//SetProcessDPIAware();
+	//SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "1");
+	//GetSystemMetrics(SM_CXSCREEN);
+	//GetSystemMetrics(SM_CYSCREEN);
+	RenderWindow window("Meowstro v1.1", 1920, 1080, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 	
 #ifdef CI_BUILD
 	SDL_Delay(3000);
@@ -30,32 +24,74 @@ int main(int argc, char *args[])
 	return 0;
 #endif
 	
-	const int NUM_FISH_TEXTURES = 9;
-	//SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
-
-	//fishTextures[0] = window.loadTexture("../assets/images/blue-fish/fish-1.png");
-	//fishTextures[1] = window.loadTexture("../assets/images/blue-fish/fish-2.png");
-	//fishTextures[2] = window.loadTexture("../assets/images/blue-fish/fish-3.png");
-	//fishTextures[3] = window.loadTexture("../assets/images/green-fish/fish-1.png");
-	//fishTextures[4] = window.loadTexture("../assets/images/green-fish/fish-2.png");
-	//fishTextures[5] = window.loadTexture("../assets/images/green-fish/fish-3.png");
-	//fishTextures[6] = window.loadTexture("../assets/images/gold-fish/fish-1.png");
-	//fishTextures[7] = window.loadTexture("../assets/images/gold-fish/fish-2.png");
-	//fishTextures[8] = window.loadTexture("../assets/images/gold-fish/fish-3.png");
-
-	//Entity fishEntities[8] = { Entity(180, 570, fishTextures[0]),
-	//						   Entity(408, 570, fishTextures[1]),
-	//						   Entity(636, 570, fishTextures[2]),
-	//						   Entity(864, 570, fishTextures[3]),
-	//						   Entity(1092, 570, fishTextures[4]),
-	//						   Entity(1092, 410, fishTextures[5]),
-	//						   Entity(1092, 250, fishTextures[6]),
-	//						   Entity(1092, 90, fishTextures[7]) };
-
 	bool gameRunning = true;
 	SDL_Event event;
+	//{
+	//	bool onMenu = true;
+	//	short int option = 0;
+	//	SDL_Texture* selected = window.loadTexture("../assets/images/selected.png");
+	//	Entity menu = Entity(0, 0, window.loadTexture("../assets/images/Ocean.png"));
+
+	//	while (onMenu)
+	//	{
+	//		while (SDL_PollEvent(&event))
+	//		{
+	//			switch (event.type)
+	//			{
+	//			case SDL_QUIT:
+	//			{
+	//				onMenu = false;
+	//				gameRunning = false;
+	//				break;
+	//			}
+	//			case SDL_KEYDOWN:
+	//			{
+	//				switch (event.key.keysym.sym) // input
+	//				{
+	//				case SDLK_ESCAPE:
+	//				{
+	//					onMenu = false;
+	//					gameRunning = false;
+	//					break;
+	//				}
+	//				case SDLK_SPACE:
+	//				{
+	//					onMenu = false;
+	//					gameRunning = false;
+	//					break;
+	//				}
+	//				}
+	//			}
+	//			}
+	//		}
+	//		window.clear();
+	//		window.render(menu);
+	//		switch (option)
+	//		{
+	//		case 0:
+	//			break;
+	//		case 1:
+	//			break;
+	//		case 2:
+	//			break;
+	//		default:
+	//			break;
+	//		}
+	//		window.display();
+
+	//	}
+	//}
+	
+	const int NUM_FISH_TEXTURES = 3;
+	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
+	fishTextures[0] = window.loadTexture("../assets/images/blue_fish.png");
+	fishTextures[1] = window.loadTexture("../assets/images/green_fish.png");
+	fishTextures[2] = window.loadTexture("../assets/images/gold_fish.png");
+
+	Entity fish[NUM_FISH_TEXTURES] = { Entity(0, 0, fishTextures[0]), Entity(0, 128, fishTextures[1]), Entity(0, 256, fishTextures[2]) };
+
 	Audio player;
-	player.playBackgroundMusic("C:/Users/xxsha/source/repos/Hugo-RM/meowstro/assets/audio/mymarch.mp3");
+	player.playBackgroundMusic("../assets/audio/mymarch.mp3");
 	while (gameRunning)
 	{
 		
@@ -76,11 +112,15 @@ int main(int argc, char *args[])
 			}
 		}
 		window.clear();
-		// window.render(background);
-		for (int i = 0; i < 8; i++)
+		for (int i = 0; i < NUM_FISH_TEXTURES; i++)
 		{
-	/*		window.render(fishEntities[i]);*/
+			window.render(fish[i]);
 		}
+	//	window.render(background);
+	//	for (int i = 0; i < 8; i++)
+	//	{
+	//		window.render(fishEntities[i]);
+	//	}
 		
 		window.display();
 		

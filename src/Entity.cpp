@@ -10,13 +10,23 @@ Entity::Entity(float x, float y, SDL_Texture* texture) : x(x), y(y), texture(tex
 	currentFrame.w = textureW;
 	currentFrame.h = textureH;
 }
-float Entity::getX()
+float Entity::getX() const
 {
 	return x;
 }
-float Entity::getY()
+float Entity::getY() const
 {
 	return y;
+}
+void Entity::setX(int x) // needs right border
+{
+	if (x < 0) this->x = 0;
+	this->x = x;
+}
+void Entity::setY(int x)
+{
+	if (y < 0) this->y = 0;
+	this->y = y;
 }
 SDL_Texture *Entity::getTexture()
 {
