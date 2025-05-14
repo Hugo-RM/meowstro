@@ -2,6 +2,7 @@
 //#include <Windows.h>
 #include <string>
 #include "RenderWindow.hpp"
+#include "Sprite.hpp"
 #include "Entity.hpp"
 #include "Audio.hpp"
 #include <filesystem>
@@ -25,8 +26,9 @@ int main(int argc, char* args[])
 	SDL_Event event;
 	{
 		bool onMenu = true;
-		short int option = 0;
-		//SDL_Texture* selected = window.loadTexture("../assets/images/selected.png");
+		bool option = false;
+		SDL_Texture* selectedTexture = window.loadTexture("C:/Users/Hugo/Documents/all-da-code/school-assignments/CSS-2/meowstro/assets/images/select_cat.png");
+		Sprite select_cat(760, 500, selectedTexture, 1, 1);
 		Entity menu = Entity(0, 0, window.loadTexture("../assets/images/Ocean.png"));
 
 		while (onMenu)
@@ -48,7 +50,16 @@ int main(int argc, char* args[])
 							case SDLK_SPACE:
 							{
 								onMenu = false;
-								gameRunning = false;
+								gameRunning = (option) ? false : true; // op0 = start op1 = exit
+								break;
+							}
+							case SDLK_UP:
+							case SDLK_DOWN:
+							{
+								if (event.key.repeat == 0) // Only first press, not repeated holding
+								{
+									option = (option) ? false : true;
+								}
 								break;
 							}
 						}
@@ -57,17 +68,12 @@ int main(int argc, char* args[])
 			}
 			window.clear();
 			window.render(menu);
-			switch (option)
-			{
-			case 0:
-				break;
-			case 1:
-				break;
-			case 2:
-				break;
-			default:
-				break;
-			}
+			// if represents selected option render location
+			if (option)
+				select_cat.setLoc(760, 775);
+			else
+				select_cat.setLoc(760, 600);
+			window.render(select_cat);
 			window.display();
 		}
 	}
@@ -78,10 +84,11 @@ int main(int argc, char* args[])
 	fishTextures[1] = window.loadTexture("../assets/images/green_fish.png");
 	fishTextures[2] = window.loadTexture("../assets/images/gold_fish.png");
 
-	Entity fish[NUM_FISH_TEXTURES] = { Entity(0, 0, fishTextures[0]), Entity(0, 128, fishTextures[1]), Entity(0, 256, fishTextures[2]) };
+	Sprite fish[NUM_FISH_TEXTURES] = { Sprite(0, 0, fishTextures[0], 1, 1), Sprite(0, 128, fishTextures[1], 1, 1), Sprite(0, 256, fishTextures[2], 1, 1) };
 
 	Audio player;
 	player.playBackgroundMusic("../assets/audio/mymarch.mp3");
+	window.clear();
 	while (gameRunning)
 	{
 		

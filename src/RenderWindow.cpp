@@ -30,19 +30,13 @@ void RenderWindow::clear()
 }
 void RenderWindow::render(Entity& entity)
 {
-	SDL_Rect src;
+	SDL_Rect src = entity.getCurrentFrame();
 	SDL_Rect destination;
-
-	src.x = entity.getCurrentFrame().x;
-	src.y = entity.getCurrentFrame().y;
-	src.w = entity.getCurrentFrame().w;
-	src.h = entity.getCurrentFrame().h;
 
 	destination.x = entity.getX();
 	destination.y = entity.getY();
 	destination.w = entity.getCurrentFrame().w;
 	destination.h = entity.getCurrentFrame().h;
-
 
 	SDL_RenderCopy(renderer, entity.getTexture(), &src, &destination);
 }

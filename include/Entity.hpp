@@ -10,7 +10,9 @@ public:
 	float getY() const;
 	SDL_Texture *getTexture();
 	SDL_Rect getCurrentFrame();
-private:
+	void setCurrentFrameW(int w);
+	void setCurrentFrameH(int h);
+protected:
 	void setX(int x);
 	void setY(int y);
 	float x;

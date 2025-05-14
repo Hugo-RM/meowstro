@@ -18,16 +18,34 @@ float Entity::getY() const
 {
 	return y;
 }
-void Entity::setX(int x) // needs right border
+void Entity::setCurrentFrameW(int w)
 {
-	if (x < 0) this->x = 0;
-	this->x = x;
+	currentFrame.w = w;
 }
-void Entity::setY(int x)
+void Entity::setCurrentFrameH(int h)
 {
-	if (y < 0) this->y = 0;
-	this->y = y;
+	currentFrame.h = h;
 }
+void Entity::setX(int x)
+{
+	if (x < 0)
+		this->x = 0;
+	else if (x > 1920)
+		this->x = 1920;
+	else
+		this->x = x;
+}
+
+void Entity::setY(int y)
+{
+	if (y < 0)
+		this->y = 0;
+	else if (y > 1080)
+		this->y = 1080;
+	else
+		this->y = y;
+}
+
 SDL_Texture *Entity::getTexture()
 {
 	return texture;
