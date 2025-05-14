@@ -52,12 +52,18 @@ set(SOURCES
     src/meowstro.cpp
     src/RenderWindow.cpp
     src/Entity.cpp
+    src/Audio.cpp
+    src/Level.cpp
+    src/AudioLogic.cpp
 )
 
 # Define Header Files
 set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
+    include/Audio.hpp
+    include/Level.hpp
+    include/AudioLogic.hpp
 )
 
 # Ensure at least one source file exists
