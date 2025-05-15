@@ -94,7 +94,7 @@ int main(int argc, char *args[])
 					}
 				}
 			}
-		} //In the case the SPACEBAR or DOWN arrow was not press, it will display miss and will do a similar job with the other loop
+		} //In the case the SPACEBAR or DOWN arrow was not press, it will display miss and will do a similar job with as the previous other loop
 		for (int i = 0; i < noteBeats.size(); ++i) {
 			if (noteHitFlags[i]) continue;
 
