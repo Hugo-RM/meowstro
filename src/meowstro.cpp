@@ -131,8 +131,8 @@ int main(int argc, char* args[])
 		}
 		window.clear();
 		window.render(ocean);
-		static float timeCounter = 0.0f;
-		timeCounter += 0.05f;
+		static double timeCounter = 0.0f;
+		timeCounter += 0.05;
 
 		for (int i = 0; i < NUM_FISH_TEXTURES; i++)
 		{
@@ -173,7 +173,7 @@ int main(int argc, char* args[])
 		window.render(fisher);
 
 		window.display();
-		SDL_Delay(50);
+		SDL_Delay(75);
 	}
 	player.stopBackgroundMusic();
 	window.~RenderWindow();
