@@ -37,7 +37,7 @@ SDL_Texture* Font::renderText(SDL_Renderer* renderer, const string& txt, SDL_Col
         return nullptr;
     }
 
-    SDL_Surface* textSurface = TTF_RenderText_Blended(font, text.c_str(), color);
+    SDL_Surface* textSurface = TTF_RenderText_Blended(font, txt.c_str(), color);
     if (!textSurface)
     {
         cerr << "Failed to create text surface: " << TTF_GetError() << endl;

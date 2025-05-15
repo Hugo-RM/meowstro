@@ -54,7 +54,6 @@ set(SOURCES
     src/Entity.cpp
     src/Audio.cpp
     src/AudioLogic.cpp
-    src/Level.cpp
     src/Font.cpp
 )
 
@@ -64,7 +63,6 @@ set(HEADERS
     include/Entity.hpp
     include/Audio.hpp
     include/AudioLogic.hpp
-    include/Level.hpp
     include/Font.hpp
 )
 
