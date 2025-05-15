@@ -54,6 +54,8 @@ set(SOURCES
     src/Entity.cpp
     src/Audio.cpp
     src/AudioLogic.cpp
+    src/Level.cpp
+    src/Font.cpp
 )
 
 # Define Header Files
@@ -61,8 +63,9 @@ set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
     include/Audio.hpp
-    include/Level.hpp
     include/AudioLogic.hpp
+    include/Level.hpp
+    include/Font.hpp
 )
 
 # Ensure at least one source file exists
