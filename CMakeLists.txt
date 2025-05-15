@@ -53,7 +53,6 @@ set(SOURCES
     src/RenderWindow.cpp
     src/Entity.cpp
     src/Audio.cpp
-    src/Level.cpp
     src/AudioLogic.cpp
 )
 
