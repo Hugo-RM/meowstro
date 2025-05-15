@@ -24,12 +24,15 @@ int main(int argc, char* args[])
 
 	bool gameRunning = true;
 	SDL_Event event;
+
 	{
 		bool onMenu = true;
 		bool option = false;
-		SDL_Texture* selectedTexture = window.loadTexture("C:/Users/Hugo/Documents/all-da-code/school-assignments/CSS-2/meowstro/assets/images/select_cat.png");
-		Sprite select_cat(760, 500, selectedTexture, 1, 1);
-		Entity menu = Entity(0, 0, window.loadTexture("../assets/images/Ocean.png"));
+		SDL_Texture* logoTexture = window.loadTexture("../assets/images/menu_cat.png");
+		SDL_Texture *selectedTexture = window.loadTexture("../assets/images/select_cat.png");
+		Entity logoCat(660, 200, logoTexture);
+		Sprite selectCat(760, 500, selectedTexture, 1, 1);
+		//Entity menu = Entity(0, 0, window.loadTexture("../assets/images/Ocean.png"));
 
 		while (onMenu)
 		{
@@ -67,27 +70,38 @@ int main(int argc, char* args[])
 				}
 			}
 			window.clear();
-			window.render(menu);
 			// if represents selected option render location
 			if (option)
-				select_cat.setLoc(760, 775);
+				selectCat.setLoc(760, 775);
 			else
-				select_cat.setLoc(760, 600);
-			window.render(select_cat);
+				selectCat.setLoc(760, 600);
+			window.render(selectCat);
+			window.render(logoCat);
 			window.display();
 		}
 	}
 	
-	const int NUM_FISH_TEXTURES = 3;
+	const int NUM_FISH_TEXTURES = 5;
 	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
 	fishTextures[0] = window.loadTexture("../assets/images/blue_fish.png");
 	fishTextures[1] = window.loadTexture("../assets/images/green_fish.png");
 	fishTextures[2] = window.loadTexture("../assets/images/gold_fish.png");
+	SDL_Texture* oceanTexture = window.loadTexture("../assets/images/Ocean.png");
+	SDL_Texture* boatTexture = window.loadTexture("../assets/images/boat.png");
+	SDL_Texture* fisherTexture = window.loadTexture("../assets/images/fisher.png");
+	Sprite fish[NUM_FISH_TEXTURES] = { Sprite(1620, 720, fishTextures[0], 1, 6), Sprite(1380, 720, fishTextures[1], 1, 6), Sprite(1140, 720, fishTextures[2], 1, 6), Sprite(900, 720, fishTextures[1], 1, 6), Sprite(660, 720, fishTextures[2], 1, 6) };
+	Sprite boat(150, 350, boatTexture, 1, 1);
+	Sprite fisher(300, 200, fisherTexture, 1, 2);
+	Entity ocean(0, 0, oceanTexture);
 
-	Sprite fish[NUM_FISH_TEXTURES] = { Sprite(0, 0, fishTextures[0], 1, 1), Sprite(0, 128, fishTextures[1], 1, 1), Sprite(0, 256, fishTextures[2], 1, 1) };
+	int thrownTimer = 0;
+	int bob = 0;
+	int sway = 0;
+	bool left = false;
+	bool thrown = false;
 
 	Audio player;
-	player.playBackgroundMusic("../assets/audio/mymarch.mp3");
+	player.playBackgroundMusic("../assets/audio/song_for_meowstro.mp3");
 	window.clear();
 	while (gameRunning)
 	{
@@ -105,22 +119,61 @@ int main(int argc, char* args[])
 				case SDLK_ESCAPE:
 					gameRunning = false;
 					break;
+				case SDLK_SPACE:
+					if (!thrown)
+					{
+						thrown = true;
+						thrownTimer = 3;
+					}
+					break;
 				}
 			}
 		}
 		window.clear();
+		window.render(ocean);
+		static float timeCounter = 0.0f;
+		timeCounter += 0.05f;
+
 		for (int i = 0; i < NUM_FISH_TEXTURES; i++)
 		{
-			window.render(fish[i]);
+			sway = static_cast<int>(sin(timeCounter + i) * 1.25);
+			bob = static_cast<int>(cos(timeCounter + i) * 1.25);
+
+			fish[i].setLoc(fish[i].getX() + sway, fish[i].getY() + bob);
 		}
-	//	window.render(background);
-	//	for (int i = 0; i < 8; i++)
-	//	{
-	//		window.render(fishEntities[i]);
-	//	}
-		
+
+		// sway boat and cat
+		boat.setLoc(boat.getX() + sway, boat.getY() + bob);
+		fisher.setLoc(fisher.getX() + sway, fisher.getY() + bob);
+		if (thrown)
+		{
+			fisher.setFrame(1, 2); // Show frame 2
+			thrownTimer--;
+
+			if (thrownTimer <= 0)
+			{
+				thrown = false;
+				fisher.setFrame(1, 1); // Return to frame 1
+			}
+		}
+		else
+		{
+			fisher.setFrame(1, 1); // Idle on frame 1
+		}
+
+		// render fish
+		for (int i = 0; i < NUM_FISH_TEXTURES; i++)
+		{
+			window.render(fish[i]++);
+			if (fish[i].getCol() == 4)
+				fish[i].resetFrame();
+		}
+
+		window.render(boat);
+		window.render(fisher);
+
 		window.display();
-		
+		SDL_Delay(50);
 	}
 	player.stopBackgroundMusic();
 	window.~RenderWindow();

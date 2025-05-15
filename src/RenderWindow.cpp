@@ -11,6 +11,7 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags) 
 		return;
 	}
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
 }
 
 SDL_Texture *RenderWindow::loadTexture(const char *filePath)

@@ -1,49 +1,42 @@
 #include "Sprite.hpp"
 
-Sprite::Sprite(float x, float y, SDL_Texture* texture, int row, int col) : Entity(x, y, texture), row(row), col(col)
+Sprite::Sprite(float x, float y, SDL_Texture* texture, int maxRow, int maxCol) : Entity(x, y, texture), maxRow(maxRow), maxCol(maxCol), row(1), col(1)
 {
 	int textureW, textureH;
 	SDL_QueryTexture(texture, NULL, NULL, &textureW, &textureH);
 
-	frameWidth = textureW / col;
-	frameHeight = textureH / row;
+	frameWidth = textureW / maxCol;
+	frameHeight = textureH / maxRow;
 
 	currentFrame.w = frameWidth;
 	currentFrame.h = frameHeight;
 }
 void Sprite::setFrame(int row, int col)
 {
-	if (row > 0)
+	if (row >= 1 && row <= maxRow && col >= 1 && col <= maxCol)
+	{
 		this->row = row;
-	else
-		this->row = 1;
-	if (col > 0)
 		this->col = col;
-	else
-		this->col = 1;
+		currentFrame.x = (this->col - 1) * frameWidth;
+		currentFrame.y = (this->row - 1) * frameHeight;
+	}
 }
-void Sprite::setLoc(int x, int y)
+Sprite Sprite::operator++(int)
 {
-	setX(x);
-	setY(y);
-}
-void Sprite::moveUp(int y)
-{
-	if (y > 0)
-		setY(getY() + y);
-}
-void Sprite::moveDown(int y)
-{
-	if (y < 0)
-		setY(getY() - y);
-}
-void Sprite::moveRight(int x)
-{
-	if (x > 0)
-		setX(getX() + x);
-}
-void Sprite::moveLeft(int x)
-{
-	if (x < 0)
-		setX(getX() - x);
+	Sprite temp = *this; // copy current state
+
+	row++;
+	if (row > maxRow)
+	{
+		row = 1;
+		col++;
+
+		if (col > maxCol)
+		{
+			col = 1;
+		}
+	}
+
+	setFrame(row, col);
+	return temp;
 }
