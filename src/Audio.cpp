@@ -13,8 +13,6 @@ Audio::Audio() {
         std::cerr << "Failed to initialize SDL_mixer: " << Mix_GetError() << std::endl;
         return;
     }
-
-  /*  Mix_AllocateChannels(16);*/ // Optional: Set up channels
 }
 Audio::~Audio() {
     Mix_CloseAudio();
@@ -27,7 +25,7 @@ void Audio::playBackgroundMusic(const std::string& filePath) {
         return;
     }
 
-    if (Mix_PlayMusic(bgMusic, -1) < 0) {
+    if (Mix_PlayMusic(bgMusic, 0) < 0) {
         std::cerr << "Failed to play music: " << Mix_GetError() << std::endl;
         Mix_FreeMusic(bgMusic);
         return;

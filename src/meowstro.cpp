@@ -60,66 +60,59 @@ int main(int argc, char *args[])
 	Audio player;
 	AudioLogic gamePlay;
 
-	std::vector<bool> noteHitFlags(49, false);
-	ExpectedHit userHit;
+	std::vector<bool> noteHitFlags(49, false); //This bool checks for the continueity (if the note has passed) regardless of getting hit. Overall helping with syncing
 
-	int hit_counter = 0;
-	int songStartTime = SDL_GetTicks();
-	player.playBackgroundMusic("C:\\Users\\xxsha\\source\\repos\\Hugo-RM\\meowstro\\assets\\audio\\song_for_meowstro.mp3");
+	std::vector<double> noteBeats = { //The vector contains the clicks in miliseconds
+	gamePlay.msFromMscs(0,3,46), gamePlay.msFromMscs(0,7,75), gamePlay.msFromMscs(0,9,38), gamePlay.msFromMscs(0,10,61), gamePlay.msFromMscs(0,12,24), gamePlay.msFromMscs(0,13,06),
+	gamePlay.msFromMscs(0,13,87), gamePlay.msFromMscs(0,15,30), gamePlay.msFromMscs(0,17,95), gamePlay.msFromMscs(0,20,0), gamePlay.msFromMscs(0,21,22), gamePlay.msFromMscs(0,23,26),
+	gamePlay.msFromMscs(0,27,14), gamePlay.msFromMscs(0,28,57), gamePlay.msFromMscs(0,30,40), gamePlay.msFromMscs(0,31,93), gamePlay.msFromMscs(0,32,65), gamePlay.msFromMscs(0,34,69),
+	gamePlay.msFromMscs(0,35,91), gamePlay.msFromMscs(0,37,95), gamePlay.msFromMscs(0,41,83), gamePlay.msFromMscs(0,43,26), gamePlay.msFromMscs(0,45,10), gamePlay.msFromMscs(0,46,52),
+	gamePlay.msFromMscs(0,48,57)
+	};
+
+	player.playBackgroundMusic("../assets/audio/meowstro_short_ver.mp3");
+	int songStartTime = SDL_GetTicks(); //Gets current ticks for better
 
 	while (gameRunning) {
-		int currentTime = SDL_GetTicks() - songStartTime;
-
+		double currentTime = SDL_GetTicks() - songStartTime; //calculates the delay by comparing the current ticks and when the song starts
 		while (SDL_PollEvent(&event)) {
-			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) {
+			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) { //Exit key, stop the geames
 				gameRunning = false;
 				break;
 			}
-			else if (event.type == SDL_KEYDOWN || event.key.keysym.sym == SDLK_SPACE) {
-				// Check for upcoming note in window
-				for (int i = 0; i < 49; ++i) {
-					if (noteHitFlags[i]) continue; // already hit
+			else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) { //Space and down arrow are use to hit or make the clicks
+				for (int i = 0; i < noteBeats.size(); ++i) {
+					if (noteHitFlags[i]) continue;
 
-					ExpectedHit expected = gamePlay.getHit(i);
-					int expectedMs = gamePlay.convertBSTtoMs(expected, bpm);
-					int delta = abs(currentTime - expectedMs);
+					double expected = noteBeats[i];
+					double delta = fabs(currentTime - expected); //Calculates the gurrent gap for the hit
 
-					if (delta <= gamePlay.getGOODW()) { // If in hit window
-						ExpectedHit userHit;
-						gamePlay.converteToBST(currentTime, bpm, userHit);
-						gamePlay.checkHit(expected, userHit, bpm);
-						noteHitFlags[i] = true; // Mark as hit
+					if (delta <= gamePlay.getGOOD()) {
+						gamePlay.checkHit(expected, currentTime); //This compares the time the SPACE or DOWN was pressed to the time it is requires for the PERFECT or GOOD or Miss
+						noteHitFlags[i] = true;
 						break;
-						std::cout << "GOOD Hit" << std::endl;
 					}
 				}
 			}
-		}
-
-		// Automatic MISS handling: if note passed its window and was not hit
-		for (int i = 0; i < 49; ++i) {
+		} //In the case the SPACEBAR or DOWN arrow was not press, it will display miss and will do a similar job with the other loop
+		for (int i = 0; i < noteBeats.size(); ++i) {
 			if (noteHitFlags[i]) continue;
 
-			ExpectedHit note = gamePlay.getHit(i);
-			int noteTime = gamePlay.convertBSTtoMs(note, bpm);
-			if (currentTime > noteTime + gamePlay.getGOODW()) {
+			double noteTime = noteBeats[i];
+			if (currentTime > noteTime + gamePlay.getGOOD()) {
 				std::cout << "Miss" << std::endl;
 				noteHitFlags[i] = true;
 			}
 		}
 
-		// Redraw and update
 		window.clear();
 		window.display();
 	}
-
-
 
 	player.stopBackgroundMusic();
 	window.~RenderWindow();
 	player.~Audio();
 	SDL_Quit();
-
 
 	return 0;
 }
