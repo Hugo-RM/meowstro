@@ -24,7 +24,6 @@ void Audio::playBackgroundMusic(const std::string& filePath) {
         std::cerr << "Failed to load music file: " << Mix_GetError() << std::endl;
         return;
     }
-
     if (Mix_PlayMusic(bgMusic, 0) < 0) {
         std::cerr << "Failed to play music: " << Mix_GetError() << std::endl;
         Mix_FreeMusic(bgMusic);
