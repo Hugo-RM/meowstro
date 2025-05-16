@@ -53,6 +53,7 @@ set(SOURCES
     src/RenderWindow.cpp
     src/Entity.cpp
     src/Audio.cpp
+    src/GameStats.cpp
 )
 
 # Define Header Files
@@ -60,6 +61,7 @@ set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
     include/Audio.hpp
+    include/GameStats.hpp
 )
 
 # Ensure at least one source file exists
