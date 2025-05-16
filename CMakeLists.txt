@@ -77,7 +77,7 @@ if(DEFINED ENV{GITHUB_ACTIONS})
     add_definitions(-DCI_BUILD)
 endif()
 cmake_policy(SET CMP0156 NEW)
-add_executable(${BIN_NAME} ${SOURCES} ${HEADERS})
+add_executable(${BIN_NAME} ${SOURCES} ${HEADERS} "src/AudioLogic.cpp")
 
 # Include Directories
 target_include_directories(${BIN_NAME} PUBLIC include)
