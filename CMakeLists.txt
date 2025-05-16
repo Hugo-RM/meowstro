@@ -55,6 +55,7 @@ set(SOURCES
     src/Audio.cpp
     src/AudioLogic.cpp
     src/Font.cpp
+    src/GameStats.cpp
 )
 
 # Define Header Files
@@ -64,6 +65,7 @@ set(HEADERS
     include/Audio.hpp
     include/AudioLogic.hpp
     include/Font.hpp
+    include/GameStats.hpp
 )
 
 # Ensure at least one source file exists
