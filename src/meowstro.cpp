@@ -40,15 +40,21 @@ int main(int argc, char *args[])
 
 	player.playBackgroundMusic("../assets/audio/meowstro_short_ver.mp3");
 	int songStartTime = SDL_GetTicks(); //Gets current ticks for better
+	bool keydown = false; //Bool for the key
+	const Uint8* state = SDL_GetKeyboardState(NULL);
 
 	while (gameRunning) {
+		if (state[SDL_SCANCODE_SPACE]) { //Checks the current state of the key and if true it makes the bool to be true (making it not work) unless not press down
+			keydown = true;
+		}
 		double currentTime = SDL_GetTicks() - songStartTime; //calculates the delay by comparing the current ticks and when the song starts
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) { //Exit key, stop the geames
 				gameRunning = false;
 				break;
 			}
-			else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) { //Space and down arrow are use to hit or make the clicks
+			else if (event.key.keysym.sym == SDLK_SPACE && (keydown == false)) { //Space and down arrow are use to hit or make the clicks
+	
 				for (int i = 0; i < noteBeats.size(); ++i) {
 					if (noteHitFlags[i]) continue;
 
@@ -61,6 +67,7 @@ int main(int argc, char *args[])
 						break;
 					}
 				}
+	
 			}
 
 		} //In the case the SPACEBAR or DOWN arrow was NOT press, it will display miss and will do a similar job as the previous other loop
@@ -75,6 +82,8 @@ int main(int argc, char *args[])
 		}
 		window.clear();
 		window.display();
+		keydown = false;
+
 	}
 	player.stopBackgroundMusic();
 	window.~RenderWindow();
