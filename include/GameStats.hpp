@@ -1,6 +1,8 @@
 //Author: Jay P
 //Desc: .hpp file for displaying game statistics
 #pragma once
+#include <iostream>
+using namespace std;
 
 class GameStats
 {
