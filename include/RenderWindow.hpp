@@ -8,6 +8,7 @@ class RenderWindow
 public:
 	RenderWindow(const char *title, int w, int h, Uint32 windowFlags = SDL_WINDOW_SHOWN);
 	SDL_Texture *loadTexture(const char *filePath);
+	SDL_Renderer *getRenderer() const;
 	void clear();
 	void render(Entity& entity);
 	void display();

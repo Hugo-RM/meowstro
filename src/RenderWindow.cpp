@@ -24,7 +24,10 @@ SDL_Texture *RenderWindow::loadTexture(const char *filePath)
 
 	return texture;
 }
-
+SDL_Renderer *RenderWindow::getRenderer() const
+{
+	return renderer;
+}
 void RenderWindow::clear()
 {
 	SDL_RenderClear(renderer);
