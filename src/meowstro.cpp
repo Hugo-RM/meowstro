@@ -28,7 +28,7 @@ const int FISH_START_X_LOCS[NUM_OF_BEATS] = { 1352, 2350, 2465, 2800, 3145,
 											  3330, 3480, 3663, 4175, 4560,
 											  4816, 5245, 6059, 6260, 6644,
 											  6885, 7100, 7545, 7801, 8230,
-											  8775, 9145, 9531, 9829, 10160};
+											  8775, 9145, 9531, 9829, 10160 };
 
 void mainMenu(RenderWindow& window, bool &gameRunning, SDL_Event &event);
 void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats);
@@ -48,16 +48,11 @@ int main(int argc, char* args[])
 
 	RenderWindow window("Meowstro", 1920, 1080, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
 
-#ifdef CI_BUILD
-	SDL_Delay(3000);
-	SDL_Quit();
-	return 0;
-#endif
-
 	srand(static_cast<unsigned int>(time(NULL)));
 	bool gameRunning = true;
 	GameStats stats;
 	SDL_Event event;
+
 	while (gameRunning)
 	{
 		mainMenu(window, gameRunning, event);
@@ -79,26 +74,31 @@ int main(int argc, char* args[])
 
 void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 {
+	Font logoFont, startFont, quitFont;
 	bool onMenu = true;
 	bool option = false;
-	Font logoFont, startFont, quitFont;
+	
 	logoFont.load(comicSans, 75);
 	startFont.load(comicSans, 55);
 	quitFont.load(comicSans, 65);
+	
 	SDL_Texture* quitTexture = quitFont.renderText(window.getRenderer(), "QUIT", YELLOW);
 	SDL_Texture* startTexture = startFont.renderText(window.getRenderer(), "START", YELLOW);
 	SDL_Texture* logoTexture = logoFont.renderText(window.getRenderer(), "MEOWSTRO", YELLOW);
 	SDL_Texture* logoCatTexture = window.loadTexture("../assets/images/menu_cat.png");
 	SDL_Texture* selectedTexture = window.loadTexture("../assets/images/select_cat.png");
+	
 	Entity quit(850, 800, quitTexture);
 	Entity logo(715, 350, logoTexture);
 	Entity start(850, 625, startTexture);
 	Entity logoCat(660, 200, logoCatTexture);
 	Sprite selectCat(760, 500, selectedTexture, 1, 1);
 
-
 	while (onMenu)
 	{
+		#ifdef CI_BUILD
+			onMenu = false;	
+		#endif
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -135,6 +135,7 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 			selectCat.setLoc(760, 775);
 		else
 			selectCat.setLoc(760, 600);
+		
 		window.render(selectCat);
 		window.render(logoCat);
 		window.render(logo);
@@ -150,9 +151,7 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats)
 {
 	static int bpm = 147;
-	//int locationsX[NUM_FISH_TEXTURES] = {  };
 	int fishStartX = 1920;
-	const int MAX_VISIBLE_NOTES = 12;
 
 	Font scoreFont, numberFont, perfectHitFont, goodHitFont;
 	scoreFont.load(comicSans, 40);
@@ -191,9 +190,9 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		fish.push_back(Sprite(FISH_START_X_LOCS[i], 720, fishTextures[rand() % 3], 1, 6));
 	}
 
+	const double travelDuration = 2000.0; // ms before beat to start moving
 	float timeCounter = 0.0f;
 
-	const double travelDuration = 2000.0; // ms before beat to start moving
 	int songStartTime = SDL_GetTicks(); //Gets current ticks for better
 	int throwDuration = 200; // for hook sprite
 	int hookTargetX = 650; // Fish location
@@ -206,16 +205,13 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	int bob = 0;
 	int handX; // This cat is thor but with a spear hook thing
 	int handY; 
-
 	
 	bool isReturning = false; // for hook sprite 
 	bool isThrowing = false; // for hook sprite
 	bool keydown = false; //Bool for the key
 	bool thrown = false; // for fisher sprite
 	
-
 	Uint32 throwStartTime = 0;
-
 
 	Audio player;
 	AudioLogic gamePlay;
@@ -235,6 +231,9 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 	while (gameRunning)
 	{
+		#ifdef CI_BUILD
+			gameRunning = false;	
+		#endif
 		if (state[SDL_SCANCODE_SPACE]) //Checks the current state of the key and if true it makes the bool to be true (making it not work) unless not press down
 			keydown = true;
 
@@ -387,7 +386,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		{
 			if (fishHits.count(i)) 
 			{
-				// Fish was hit � calculate time since hit
+				// Fish was hit calculate time since hit
 				Uint32 timeSinceHit = currentTicks - fishHitTimes[i];
 
 				if (timeSinceHit < 1000) 
@@ -410,7 +409,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 			fish[i].moveLeft(15);
 			window.render(fish[i]++);
 			if (fish[i].getCol() == 4)
-				fish[i].resetFrame(); // dead fish frames past 4�6
+				fish[i].resetFrame(); // dead fish frames were 4 and on
 		}
 
 		window.render(boat);
@@ -424,10 +423,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		
 		// Break the loop if music stopped playing
 		if (Mix_PlayingMusic() == 0)
-		{
 			gameRunning = false;
-			std::cout << "Music ended � exiting game loop." << std::endl;
-		}
 
 		SDL_Delay(75);
 	}
@@ -542,6 +538,11 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 		window.render(misses);
 		window.render(numMisses);
 		window.display();
+
+		#ifdef CI_BUILD
+			gameRunning = false;
+			return;	
+		#endif
 	}
 }
 
