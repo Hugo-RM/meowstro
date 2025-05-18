@@ -3,14 +3,11 @@
 ## Overview
 This is a game project using SDL2 and its related libraries. The project is configured using CMake and follows a structured build process to make it easy for developers to set up and contribute.
 
-## Supported Platforms
-- **Windows** ✅
-- **Linux & macOS** ❌ (Not supported yet. Future support is planned.)
-
 ## Prerequisites
 Before setting up the project, ensure you have the following installed:
 - **Visual Studio 2022** (or any C++ compiler supporting C++17)
 - **[CMake](https://cmake.org/download/)** (minimum version 3.10 | I recommend not getting the Release Candidate)
+- **(Optional) [Python](https://www.python.org/downloads/)** (Reduces amount of copy pasting SDL paths)
 
 ## Setup Instructions
 
@@ -126,9 +123,6 @@ cmake --build .
 ```
 /project-root
 │-- .github/               # GitHub-specific files (workflows, templates)
-│   │-- ISSUE_TEMPLATE/    # Issue templates for bug reports and feature requests
-│   │   │-- bug_report.md
-│   │   │-- feature_request.md
 │   │-- workflows/         # GitHub Actions workflows
 │   │   │-- build.yml      # Workflow for building the project
 │   │-- PULL_REQUEST_TEMPLATE.md # Pull request guidelines
@@ -139,7 +133,6 @@ cmake --build .
 │   │-- images/            # Image files
 │-- build/                 # CMake build files (includes build/bin/Debug)
 │-- docs/                  # Project documentation
-│   │-- API_documentation.md
 │   │-- design_notes.md
 │   │-- how_to_play.md
 │-- include/               # Header files
@@ -153,7 +146,6 @@ cmake --build .
 │-- config.json            # Active configuration file
 |-- generate_cmake_presets.py  # Generates the CMakePresets.json based on config.json
 │-- LICENSE                # Project LICENSE
-│-- CHANGELOG.md           # Project CHANGELOG
 │-- README.md              # Project README
 ```
 
@@ -161,7 +153,3 @@ cmake --build .
 - **DON'T** commit `config.json` or `CMakePresets.json`. These files contain personal paths should be local.
 - If modifying build configuration, ensure compatibility with Windows.
 - Follow C++ best practices and maintain code clarity.
-
----
-This README will be updated as Linux and macOS support is added. 🚀
-

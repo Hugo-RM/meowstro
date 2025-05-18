@@ -38,6 +38,7 @@ std::string formatScore(int score);
 
 int main(int argc, char* args[])
 {
+
 	if (SDL_Init(SDL_INIT_VIDEO) > 0)
 		std::cout << "SDL_Init has failed, SDL ERROR: " << SDL_GetError();
 	if (!(IMG_Init(IMG_INIT_PNG)))
@@ -52,6 +53,7 @@ int main(int argc, char* args[])
 	SDL_Quit();
 	return 0;
 #endif
+
 	srand(static_cast<unsigned int>(time(NULL)));
 	bool gameRunning = true;
 	GameStats stats;
@@ -385,7 +387,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		{
 			if (fishHits.count(i)) 
 			{
-				// Fish was hit — calculate time since hit
+				// Fish was hit ï¿½ calculate time since hit
 				Uint32 timeSinceHit = currentTicks - fishHitTimes[i];
 
 				if (timeSinceHit < 1000) 
@@ -408,7 +410,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 			fish[i].moveLeft(15);
 			window.render(fish[i]++);
 			if (fish[i].getCol() == 4)
-				fish[i].resetFrame(); // dead fish frames past 4–6
+				fish[i].resetFrame(); // dead fish frames past 4ï¿½6
 		}
 
 		window.render(boat);
@@ -424,7 +426,7 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		if (Mix_PlayingMusic() == 0)
 		{
 			gameRunning = false;
-			std::cout << "Music ended — exiting game loop." << std::endl;
+			std::cout << "Music ended ï¿½ exiting game loop." << std::endl;
 		}
 
 		SDL_Delay(75);

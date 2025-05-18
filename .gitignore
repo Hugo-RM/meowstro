@@ -12,3 +12,4 @@ CMakePresets.json
 *.log
 *.tmp
 *.swp
+/.vs
