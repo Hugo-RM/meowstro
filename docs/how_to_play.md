@@ -1,5 +1,12 @@
-Hello there,
+# How to Play Meowstro
+## This game has 3 controls:
+- Spacebar
+- Up Arrow
+- Down Arrow
 
-Sorry, this is a work in progress and I am new to all of this.
+### In Menu screens:
+- Arrow buttons to navigate options (No mouse support)
+- Spacebar to select option
 
-Gameplay details will be updated as soon as there is gameplay :)
+### In Game:
+- Spacebar to throw hook
