@@ -55,6 +55,7 @@ set(SOURCES
     src/Audio.cpp
     src/AudioLogic.cpp
     src/Font.cpp
+    src/Sprite.cpp
     src/GameStats.cpp
 )
 
@@ -65,6 +66,7 @@ set(HEADERS
     include/Audio.hpp
     include/AudioLogic.hpp
     include/Font.hpp
+    include/Sprite.hpp
     include/GameStats.hpp
 )
 

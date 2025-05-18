@@ -12,6 +12,11 @@ public:
 	void render(Entity& entity);
 	void display();
 	~RenderWindow();
+
+	inline SDL_Renderer* getRenderer() const
+	{
+		return renderer;
+	}
 private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;

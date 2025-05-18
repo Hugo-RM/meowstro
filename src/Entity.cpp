@@ -10,17 +10,13 @@ Entity::Entity(float x, float y, SDL_Texture* texture) : x(x), y(y), texture(tex
 	currentFrame.w = textureW;
 	currentFrame.h = textureH;
 }
-float Entity::getX()
+void Entity::setCurrentFrameW(int w)
 {
-	return x;
+	currentFrame.w = w;
 }
-float Entity::getY()
+void Entity::setCurrentFrameH(int h)
 {
-	return y;
-}
-SDL_Texture *Entity::getTexture()
-{
-	return texture;
+	currentFrame.h = h;
 }
 SDL_Rect Entity::getCurrentFrame()
 {

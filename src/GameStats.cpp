@@ -16,7 +16,7 @@ GameStats::GameStats(int score, int combo, int hits, int misses) //takes in hits
 {
 	setScore(score); 
 	setCombo(combo); //cut
-	accuracy = (1.0 - (static_cast<double>(misses) / hits)) * 100; // (1 - %ofMisses) * 100 = accuracy 
+	accuracy = (hits > 0) ? (static_cast<double>(hits) / (hits + misses)) * 100.0 : 0.0; // (1 - %ofMisses) * 100 = accuracy 
 }
 void GameStats::setScore(int score)
 {
@@ -62,6 +62,14 @@ void GameStats::increaseScore(int score) //pass in 100 for perfect, 50 for good
 {
 	this->score += score;
 }
+void GameStats::resetStats()
+{
+	setScore(0);
+	setCombo(0);
+	setHits(0);
+	setMisses(0);
+	setAccuracy(0);
+}
 ostream& operator << (ostream& out, const GameStats& s) //displays stats at end of game
 {
 	out << "-*Final Stats!*-" << endl;
@@ -81,16 +89,12 @@ ostream& operator << (ostream& out, const GameStats& s) //displays stats at end 
 GameStats GameStats::operator++ (int) //adds 1 to hits
 {
 	hits++;
-	/*
-	 if (perfect window)
-		score += 100;
-	 else
-		score += 50;
-	*/
+	accuracy = (static_cast<double>(hits) / (hits + misses)) * 100.0;
 	return *this;
 }
 GameStats GameStats::operator-- (int) //adds 1 to misses
 {
 	misses++;
+	accuracy = (hits > 0) ? (static_cast<double>(hits) / (hits + misses)) * 100.0 : 0.0;
 	return *this;
 }

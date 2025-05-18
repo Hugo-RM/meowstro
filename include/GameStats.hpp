@@ -22,6 +22,7 @@ public:
 	int getMisses()const;
 	double getAccuracy()const;
 	void increaseScore(int score);
+	void resetStats();
 	//others
 	friend ostream& operator << (ostream& out, const GameStats& s);
 	GameStats operator++ (int); //adds to hits and score

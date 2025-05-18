@@ -18,8 +18,7 @@ public:
     double timestampMsToBeat(double timestampMs, int bpm);
 
     // Hit registration and evaluation
-    void checkHit(double expectedMs, double actualMs);
-
+    short int checkHit(double expectedMs, double actualMs);
 private:
     const double PERFECT_WINDOW_MS = 60.0;
     const double GOOD_WINDOW_MS = 120.0;
