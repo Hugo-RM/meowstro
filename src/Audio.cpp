@@ -16,7 +16,6 @@ Audio::Audio() {
 }
 Audio::~Audio() {
     Mix_CloseAudio();
-    SDL_Quit();
 }
 void Audio::playBackgroundMusic(const std::string& filePath) {
     Mix_Music* bgMusic = Mix_LoadMUS(filePath.c_str());

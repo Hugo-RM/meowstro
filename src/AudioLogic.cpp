@@ -19,18 +19,20 @@ double AudioLogic::timestampMsToBeat(double timestampMs, int bpm) {
     return timestampMs * bpm / 60000.0;
 }
 
-void AudioLogic::checkHit(double expectedMs, double actualMs) {
+short int AudioLogic::checkHit(double expectedMs, double actualMs) {
     double delta = fabs(expectedMs - actualMs);
+    short int scoreType = 0;
 
     if (delta <= PERFECT_WINDOW_MS) {
-        std::cout << "Perfect" << std::endl;
+        std::cout << "perfect, Delta: " << delta << std::endl;
+        scoreType = 2;
     }
     else if (delta <= GOOD_WINDOW_MS) {
-        std::cout << "Good" << std::endl;
+        std::cout << "good, Delta: " << delta << std::endl;
+        scoreType = 1;
     }
-    else {
-        std::cout << "Miss" << std::endl;
-    }
+
+    return scoreType;
 }
 
 double AudioLogic::msFromMscs(int minutes, int seconds, int centiseconds) {
