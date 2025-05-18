@@ -4,6 +4,7 @@
 //
 //
 
+#include <unordered_map>
 #include <unordered_set>
 #include <iostream>
 #include <sstream>
@@ -23,11 +24,11 @@ const char* comicSans = "../assets/fonts/Comic Sans MS.ttf";
 const int NUM_OF_BEATS = 25;
 const int NUM_FISH_TEXTURES = 3;
 const SDL_Color YELLOW = { 255, 255, 100, 255 };
-const int FISH_START_X_LOCS[NUM_OF_BEATS] = { 1352, 2340, 2530, 2888, 3230,
-											  3403, 3573, 3673, 4130, 4560,
+const int FISH_START_X_LOCS[NUM_OF_BEATS] = { 1352, 2350, 2465, 2800, 3145,
+											  3330, 3480, 3663, 4175, 4560,
 											  4816, 5245, 6059, 6260, 6644,
-											  7065, 7216, 7545, 7801, 8230,
-											  9044, 9445, 9731, 10029, 10360};
+											  6885, 7100, 7545, 7801, 8230,
+											  8775, 9145, 9531, 9829, 10160};
 
 void mainMenu(RenderWindow& window, bool &gameRunning, SDL_Event &event);
 void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats);
@@ -151,9 +152,11 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	int fishStartX = 1920;
 	const int MAX_VISIBLE_NOTES = 12;
 
-	Font scoreFont, numberFont;
+	Font scoreFont, numberFont, perfectHitFont, goodHitFont;
 	scoreFont.load(comicSans, 40);
 	numberFont.load(comicSans, 35);
+	perfectHitFont.load(comicSans, 30);
+	goodHitFont.load(comicSans, 30);
 
 	// Textures
 	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
@@ -166,6 +169,8 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	SDL_Texture* hookTexture = window.loadTexture("../assets/images/hook.png");
 	SDL_Texture* scoreTexture = scoreFont.renderText(window.getRenderer(), "SCORE", { 0, 0, 0, 255 });
 	SDL_Texture* numberTexture = numberFont.renderText(window.getRenderer(), "000000", { 0, 0, 0, 255 });
+	SDL_Texture* perfectHitTexture = perfectHitFont.renderText(window.getRenderer(), "1000", { 255, 0, 0, 255 });
+	SDL_Texture* goodHitTexture = goodHitFont.renderText(window.getRenderer(), "500", { 255, 0, 0, 255 });
 
 	// Sprites & Background
 	Entity ocean(0, 0, oceanTexture);
@@ -174,8 +179,11 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	Sprite fisher(300, 200, fisherTexture, 1, 2);
 	Sprite boat(150, 350, boatTexture, 1, 1);
 	Sprite hook(430, 215, hookTexture, 1, 1);
-	std::vector<Sprite> fish;
-	std::unordered_set<int> fishHits;
+	std::vector<Sprite> fish; 
+	std::unordered_set<int> fishHits; // index of fish hit
+	std::unordered_map<int, Uint32> fishHitTimes; // index -> time of hit
+	std::unordered_map<int, bool> fishHitTypes; // index -> false (Good), true (Perfect)
+	
 	for (int i = 0; i < 25; i++)
 	{
 		fish.push_back(Sprite(FISH_START_X_LOCS[i], 720, fishTextures[rand() % 3], 1, 6));
@@ -197,10 +205,12 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	int handX; // This cat is thor but with a spear hook thing
 	int handY; 
 
+	
 	bool isReturning = false; // for hook sprite 
 	bool isThrowing = false; // for hook sprite
 	bool keydown = false; //Bool for the key
 	bool thrown = false; // for fisher sprite
+	
 
 	Uint32 throwStartTime = 0;
 
@@ -270,15 +280,18 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 						short int scoreType = gamePlay.checkHit(expected, currentTime); //This compares the time the SPACE or DOWN was pressed to the time it is requires for the PERFECT or GOOD or Miss
 						noteHitFlags[i] = true;
 						fishHits.insert(i);
+						fishHitTimes[i] = SDL_GetTicks(); // Record when hit occurred
 						if (scoreType == 2) 
 						{
 							stats++;
-							stats.increaseScore(100);
+							stats.increaseScore(1000);
+							fishHitTypes[i] = true;
 						}
 						else if (scoreType == 1)
 						{
 							stats++;
-							stats.increaseScore(50);
+							stats.increaseScore(500);
+							fishHitTypes[i] = false;
 						}
 						break;
 					}
@@ -365,29 +378,38 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 			hook.setLoc(hook.getX() + sway, hook.getY() + bob);
 		}
 
+		Uint32 currentTicks = SDL_GetTicks();
+
 		// render fish
 		for (int i = 0; i < NUM_OF_BEATS; i++)
 		{
-			if (fishHits.count(i)) // if fish i has been hit
+			if (fishHits.count(i)) 
 			{
-				// Perform alternative action for hit fish
-				fish[i].setFrame(1, 4);
-				window.render(fish[i]++);
-				fish[i].moveUp(50);
-				fish[i].moveLeft(30);
-				window.render(fish[i]++);
-				fish[i].resetFrame();
-			}
-			else
-			{
-				// Move and render normal fish
-				fish[i].moveLeft(15);
-				window.render(fish[i]++);
-				if (fish[i].getCol() == 4)
-					fish[i].resetFrame(); // dead fish frames past 4–6
-			}
-		}
+				// Fish was hit — calculate time since hit
+				Uint32 timeSinceHit = currentTicks - fishHitTimes[i];
 
+				if (timeSinceHit < 1000) 
+				{
+					// Show text instead of fish for 1 second
+					SDL_Texture* scoreTex = (fishHitTypes[i]) ? perfectHitTexture : goodHitTexture;
+
+					SDL_Rect textRect;
+					textRect.x = fish[i].getX(); // Same location as fish
+					textRect.y = fish[i].getY() - 30; // Slightly above fish
+					SDL_QueryTexture(scoreTex, NULL, NULL, &textRect.w, &textRect.h);
+
+					SDL_RenderCopy(window.getRenderer(), scoreTex, NULL, &textRect);
+				}
+
+				continue; // Skip rendering the fish itself
+			}
+
+			// Move and render normal fish
+			fish[i].moveLeft(15);
+			window.render(fish[i]++);
+			if (fish[i].getCol() == 4)
+				fish[i].resetFrame(); // dead fish frames past 4–6
+		}
 
 		window.render(boat);
 		window.render(hook);
@@ -396,7 +418,15 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		window.render(number);
 
 		window.display();
-		keydown = false;
+		keydown = false; // prevents holding space
+		
+		// Break the loop if music stopped playing
+		if (Mix_PlayingMusic() == 0)
+		{
+			gameRunning = false;
+			std::cout << "Music ended — exiting game loop." << std::endl;
+		}
+
 		SDL_Delay(75);
 	}
 	player.stopBackgroundMusic();
