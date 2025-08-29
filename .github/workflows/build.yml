@@ -15,8 +15,8 @@ jobs:
 
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
+            - name: Checkout Repository
+              uses: actions/checkout@v4
 
       - name: Configure CMake
         run: >
@@ -28,7 +28,7 @@ jobs:
       - name: Run Executable
         working-directory: build/bin/Debug
         run: |
-          ./meowstro.exe --test
+          run: cmake --build build --parallel 4
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -83,7 +83,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y clang-tidy
           cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-          clang-tidy -p build $(find src -name '*.cpp')
+              run: cmake --build build --parallel $(nproc)
 
       - name: Run ctest (unit tests)
         run: |
@@ -135,7 +135,7 @@ jobs:
           ctest --output-on-failure || true
 
       - name: Upload Executable Artifact (main branch only)
-        if: github.ref == 'refs/heads/main'
+              run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
         uses: actions/upload-artifact@v4
         with:
           name: meowstro-macos
