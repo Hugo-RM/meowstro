@@ -16,7 +16,7 @@ jobs:
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 'latest'
+          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
 
       - name: Configure CMake
         run: >
@@ -62,7 +62,7 @@ jobs:
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 'latest'
+          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
       
       - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
@@ -106,7 +106,7 @@ jobs:
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          vcpkgGitCommitId: 'latest'
+          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
       
       - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
