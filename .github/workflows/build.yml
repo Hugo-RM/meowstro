@@ -28,7 +28,7 @@ jobs:
       - name: Run Executable
         working-directory: build/bin/Debug
         run: |
-          ./meowstro.exe || exit 0  # Game requires input to quit; ignore nonzero exit code
+          ./meowstro.exe --test
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -72,7 +72,7 @@ jobs:
       
       - name: Run Executable
         working-directory: build/bin/Debug
-        run: ./meowstro || true
+        run: ./meowstro --test
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -116,7 +116,7 @@ jobs:
       
       - name: Run Executable
         working-directory: build/bin/Debug
-        run: ./meowstro || true
+        run: ./meowstro --test
 
       - name: Run cppcheck (static analysis)
         run: |
