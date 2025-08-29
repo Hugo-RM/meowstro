@@ -11,24 +11,22 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
-            - name: Checkout Repository
-              uses: actions/checkout@v4
+        with:
+          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
 
       - name: Configure CMake
-        run: >
-          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Project
-        run: cmake --build build
+        run: cmake --build build --parallel 4
 
       - name: Run Executable
         working-directory: build/bin/Debug
-        run: |
-          run: cmake --build build --parallel 4
+        run: ./meowstro.exe --test
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -56,24 +54,24 @@ jobs:
         with:
           name: meowstro-windows
           path: build/bin/Debug/
-  
+
   build-linux:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
-      
+
       - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-      
+
       - name: Build Project
-        run: cmake --build build
-      
+        run: cmake --build build --parallel $(nproc)
+
       - name: Run Executable
         working-directory: build/bin/Debug
         run: ./meowstro --test
@@ -87,7 +85,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y clang-tidy
           cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-              run: cmake --build build --parallel $(nproc)
+          clang-tidy -p build $(find src -name '*.cpp')
 
       - name: Run ctest (unit tests)
         run: |
@@ -105,19 +103,19 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
-      
+        uses: actions/checkout@v4
+
       - name: Install vcpkg
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
-      
+
       - name: Configure CMake
         run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
-      
+
       - name: Build Project
-        run: cmake --build build
-      
+        run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
+
       - name: Run Executable
         working-directory: build/bin/Debug
         run: ./meowstro --test
@@ -139,7 +137,7 @@ jobs:
           ctest --output-on-failure || true
 
       - name: Upload Executable Artifact (main branch only)
-              run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: meowstro-macos
