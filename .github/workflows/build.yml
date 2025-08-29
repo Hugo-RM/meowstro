@@ -32,12 +32,16 @@ jobs:
 
       - name: Run cppcheck (static analysis)
         run: |
-          choco install cppcheck -y
+          if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
+            choco install cppcheck -y
+            refreshenv
+          }
           cppcheck --enable=all --inconclusive --std=c++17 --quiet src include
 
       - name: Run clang-tidy (static analysis)
         run: |
           choco install llvm -y
+          refreshenv
           cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
           clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
 
