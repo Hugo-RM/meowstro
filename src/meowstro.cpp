@@ -38,7 +38,7 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 
 std::string formatScore(int score);
 
-int main(int argc, char* args[])
+int main(int argc, char** argv)
 {
 	if (SDL_Init(SDL_INIT_VIDEO) > 0)
 		std::cout << "SDL_Init has failed, SDL ERROR: " << SDL_GetError();
