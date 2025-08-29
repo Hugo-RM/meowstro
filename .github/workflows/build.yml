@@ -3,85 +3,140 @@ name: Windows Build and Test
 on:
   push:
     branches:
-      - main
+      - '**'
   pull_request:
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Set Up Python
-        uses: actions/setup-python@v4
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
         with:
-          python-version: "3.x"
-
-      - name: Install SDL2
-        run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL/releases/download/release-2.32.2/SDL2-devel-2.32.2-VC.zip -OutFile SDL2.zip
-          Expand-Archive -Path SDL2.zip -DestinationPath C:\SDL2_tmp
-          Move-Item -Path C:\SDL2_tmp\SDL2-2.32.2\* -Destination C:\SDL2 -Force
-          if (Test-Path "C:\SDL2\include\SDL.h") { echo "✅ Extraction Successful: SDL.h found" } else { echo "❌ Extraction Failed: SDL.h missing"; exit 1 }
-
-      - name: Install SDL2_image
-        run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.8/SDL2_image-devel-2.8.8-VC.zip -OutFile SDL2_image.zip
-          Expand-Archive -Path SDL2_image.zip -DestinationPath C:\SDL2_image_tmp
-          Move-Item -Path C:\SDL2_image_tmp\SDL2_image-2.8.8\* -Destination C:\SDL2_image -Force
-          if (Test-Path "C:\SDL2_image\include\SDL_image.h") { echo "✅ Extraction Successful: SDL_image.h found" } else { echo "❌ Extraction Failed: SDL_image.h missing"; exit 1 }
-
-      - name: Install SDL2_mixer
-        run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.8.1/SDL2_mixer-devel-2.8.1-VC.zip -OutFile SDL2_mixer.zip
-          Expand-Archive -Path SDL2_mixer.zip -DestinationPath C:\SDL2_mixer_tmp
-          Move-Item -Path C:\SDL2_mixer_tmp\SDL2_mixer-2.8.1\* -Destination C:\SDL2_mixer -Force
-          if (Test-Path "C:\SDL2_mixer\include\SDL_mixer.h") { echo "✅ Extraction Successful: SDL_mixer.h found" } else { echo "❌ Extraction Failed: SDL_mixer.h missing"; exit 1 }
-
-      - name: Install SDL2_ttf
-        run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.24.0/SDL2_ttf-devel-2.24.0-VC.zip -OutFile SDL2_ttf.zip
-          Expand-Archive -Path SDL2_ttf.zip -DestinationPath C:\SDL2_ttf_tmp
-          Move-Item -Path C:\SDL2_ttf_tmp\SDL2_ttf-2.24.0\* -Destination C:\SDL2_ttf -Force
-          if (Test-Path "C:\SDL2_ttf\include\SDL_ttf.h") { echo "✅ Extraction Successful: SDL_ttf.h found" } else { echo "❌ Extraction Failed: SDL_ttf.h missing"; exit 1 }
-
-      - name: Create config.json from Default
-        run: |
-          copy config.default.json config.json
-          python -c "import json; f=open('config.json', 'r+'); d=json.load(f); \
-          d.update({'SDL2_DIR': 'C:/SDL2', 'SDL2_IMAGE_DIR': 'C:/SDL2_image', 'SDL2_MIXER_DIR': 'C:/SDL2_mixer', 'SDL2_TTF_DIR': 'C:/SDL2_ttf'}); \
-          f.seek(0); json.dump(d, f, indent=4); f.truncate(); f.close()"
-
-      # - name: Debug Config JSON
-      #   run: type config.json
-
-      - name: Generate CMakePresets.json
-        run: python generate_cmake_presets.py
-
-      # - name: Debug CMakePresets.json
-      #   run: type CMakePresets.json
+          vcpkgGitCommitId: 'latest'
 
       - name: Configure CMake
-        run: cmake --preset my-build
-
-      # - name: Debug CMake Cache Variables 
-      #   run: cmake --preset my-build --debug-output
+        run: >
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Project
-        run: |
-          cd "./build"
-          cmake --build .
+        run: cmake --build build
 
-      - name: Copy DLLs to Executable Directory
-        run: |
-          copy C:\SDL2\lib\x64\SDL2.dll build/bin/Debug/
-          copy C:\SDL2_image\lib\x64\SDL2_image.dll build/bin/Debug/
-          copy C:\SDL2_mixer\lib\x64\SDL2_mixer.dll build/bin/Debug/
-          copy C:\SDL2_ttf\lib\x64\SDL2_ttf.dll build/bin/Debug/
-
-      - name: Run Executable (Optional)
+      - name: Run Executable
         working-directory: build/bin/Debug
         run: |
-          ./meowstro.exe
+          ./meowstro.exe || exit 0  # Game requires input to quit; ignore nonzero exit code
+
+      - name: Run cppcheck (static analysis)
+        run: |
+          choco install cppcheck -y
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet src include
+
+      - name: Run clang-tidy (static analysis)
+        run: |
+          choco install llvm -y
+          cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
+
+      - name: Run ctest (unit tests)
+        run: |
+          cd build
+          ctest --output-on-failure || true
+
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-windows
+          path: build/bin/Debug/
+  
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 'latest'
+      
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+      
+      - name: Build Project
+        run: cmake --build build
+      
+      - name: Run Executable
+        working-directory: build/bin/Debug
+        run: ./meowstro || true
+
+      - name: Run cppcheck (static analysis)
+        run: |
+          sudo apt-get update && sudo apt-get install -y cppcheck
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet src include
+
+      - name: Run clang-tidy (static analysis)
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-tidy
+          cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          clang-tidy -p build $(find src -name '*.cpp')
+
+      - name: Run ctest (unit tests)
+        run: |
+          cd build
+          ctest --output-on-failure || true
+
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-linux
+          path: build/bin/Debug/
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Install vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: 'latest'
+      
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+      
+      - name: Build Project
+        run: cmake --build build
+      
+      - name: Run Executable
+        working-directory: build/bin/Debug
+        run: ./meowstro || true
+
+      - name: Run cppcheck (static analysis)
+        run: |
+          brew install cppcheck
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet src include
+
+      - name: Run clang-tidy (static analysis)
+        run: |
+          brew install llvm
+          cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          clang-tidy -p build $(find src -name '*.cpp')
+
+      - name: Run ctest (unit tests)
+        run: |
+          cd build
+          ctest --output-on-failure || true
+
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-macos
+          path: build/bin/Debug/

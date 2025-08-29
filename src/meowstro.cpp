@@ -20,7 +20,7 @@
 #include "Audio.hpp"
 #include "Font.hpp"
 
-const char* comicSans = "../assets/fonts/Comic Sans MS.ttf";
+const char* comicSans = "./assets/fonts/Comic Sans MS.ttf";
 const int NUM_OF_BEATS = 25;
 const int NUM_FISH_TEXTURES = 3;
 const SDL_Color YELLOW = { 255, 255, 100, 255 };
@@ -85,8 +85,8 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 	SDL_Texture* quitTexture = quitFont.renderText(window.getRenderer(), "QUIT", YELLOW);
 	SDL_Texture* startTexture = startFont.renderText(window.getRenderer(), "START", YELLOW);
 	SDL_Texture* logoTexture = logoFont.renderText(window.getRenderer(), "MEOWSTRO", YELLOW);
-	SDL_Texture* logoCatTexture = window.loadTexture("../assets/images/menu_cat.png");
-	SDL_Texture* selectedTexture = window.loadTexture("../assets/images/select_cat.png");
+	SDL_Texture* logoCatTexture = window.loadTexture("./assets/images/menu_cat.png");
+	SDL_Texture* selectedTexture = window.loadTexture("./assets/images/select_cat.png");
 	
 	Entity quit(850, 800, quitTexture);
 	Entity logo(715, 350, logoTexture);
@@ -96,9 +96,6 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 
 	while (onMenu)
 	{
-		#ifdef CI_BUILD
-			onMenu = false;	
-		#endif
 		while (SDL_PollEvent(&event))
 		{
 			switch (event.type)
@@ -161,13 +158,13 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 	// Textures
 	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
-	fishTextures[0] = window.loadTexture("../assets/images/blue_fish.png");
-	fishTextures[1] = window.loadTexture("../assets/images/green_fish.png");
-	fishTextures[2] = window.loadTexture("../assets/images/gold_fish.png");
-	SDL_Texture* oceanTexture = window.loadTexture("../assets/images/Ocean.png");
-	SDL_Texture* boatTexture = window.loadTexture("../assets/images/boat.png");
-	SDL_Texture* fisherTexture = window.loadTexture("../assets/images/fisher.png");
-	SDL_Texture* hookTexture = window.loadTexture("../assets/images/hook.png");
+	fishTextures[0] = window.loadTexture("./assets/images/blue_fish.png");
+	fishTextures[1] = window.loadTexture("./assets/images/green_fish.png");
+	fishTextures[2] = window.loadTexture("./assets/images/gold_fish.png");
+	SDL_Texture* oceanTexture = window.loadTexture("./assets/images/Ocean.png");
+	SDL_Texture* boatTexture = window.loadTexture("./assets/images/boat.png");
+	SDL_Texture* fisherTexture = window.loadTexture("./assets/images/fisher.png");
+	SDL_Texture* hookTexture = window.loadTexture("./assets/images/hook.png");
 	SDL_Texture* scoreTexture = scoreFont.renderText(window.getRenderer(), "SCORE", { 0, 0, 0, 255 });
 	SDL_Texture* numberTexture = numberFont.renderText(window.getRenderer(), "000000", { 0, 0, 0, 255 });
 	SDL_Texture* perfectHitTexture = perfectHitFont.renderText(window.getRenderer(), "1000", { 255, 0, 0, 255 });
@@ -208,14 +205,14 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	
 	bool isReturning = false; // for hook sprite 
 	bool isThrowing = false; // for hook sprite
-	bool keydown = false; //Bool for the key
+	bool keydown = false; // Bool for the key
 	bool thrown = false; // for fisher sprite
 	
 	Uint32 throwStartTime = 0;
 
 	Audio player;
 	AudioLogic gamePlay;
-	player.playBackgroundMusic("../assets/audio/meowstro_short_ver.mp3");
+	player.playBackgroundMusic("./assets/audio/meowstro_short_ver.mp3");
 
 	std::vector<bool> noteHitFlags(49, false); //This bool checks for the continueity (if the note has passed) regardless of getting hit. Overall helping with syncing
 
@@ -231,9 +228,6 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 	while (gameRunning)
 	{
-		#ifdef CI_BUILD
-			gameRunning = false;	
-		#endif
 		if (state[SDL_SCANCODE_SPACE]) //Checks the current state of the key and if true it makes the bool to be true (making it not work) unless not press down
 			keydown = true;
 
@@ -468,8 +462,8 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 	SDL_Texture* quitTexture = quitFont.renderText(window.getRenderer(), "QUIT", YELLOW);
 	SDL_Texture* retryTexture = retryFont.renderText(window.getRenderer(), "RETRY", YELLOW);
 	SDL_Texture* logoTexture = logoFont.renderText(window.getRenderer(), "MEOWSTRO", YELLOW);
-	SDL_Texture* selectedTexture = window.loadTexture("../assets/images/select_cat.png");
-	SDL_Texture* logoCatTexture = window.loadTexture("../assets/images/menu_cat.png");
+	SDL_Texture* selectedTexture = window.loadTexture("./assets/images/select_cat.png");
+	SDL_Texture* logoCatTexture = window.loadTexture("./assets/images/menu_cat.png");
 	
 	Entity titleStats(785, 325, statsTexture);
 	Entity score(650, 400, scoreTexture);
@@ -538,11 +532,6 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 		window.render(misses);
 		window.render(numMisses);
 		window.display();
-
-		#ifdef CI_BUILD
-			gameRunning = false;
-			return;	
-		#endif
 	}
 }
 
