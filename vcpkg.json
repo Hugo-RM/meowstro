@@ -4,7 +4,10 @@
   "dependencies": [
     "sdl2",
     "sdl2-image",
-    "sdl2-mixer[mpg123]",
-    "sdl2-ttf"
+    "sdl2-ttf",
+    {
+      "name": "sdl2-mixer",
+      "features": ["mpg123"]
+    }
   ]
 }
