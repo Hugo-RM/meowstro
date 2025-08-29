@@ -40,6 +40,9 @@ std::string formatScore(int score);
 
 int main(int argc, char** argv)
 {
+	// Add tests later, Audio fails to find endpoint in Git Actions
+	if (argc > 1 && std::string(argv[1]) == "--test") 
+		return 0;
 	if (SDL_Init(SDL_INIT_VIDEO) > 0)
 		std::cout << "SDL_Init has failed, SDL ERROR: " << SDL_GetError();
 	if (!(IMG_Init(IMG_INIT_PNG)))
@@ -53,7 +56,6 @@ int main(int argc, char** argv)
 	bool gameRunning = true;
 	GameStats stats;
 	SDL_Event event;
-	isTest = (argc > 1 && std::string(argv[1]) == "--test");
 
 	while (gameRunning)
 	{
@@ -64,9 +66,6 @@ int main(int argc, char** argv)
 			std::cout << stats;
 			endScreen(window, gameRunning, event, stats);
 			stats.resetStats();
-		}
-		if (isTest) {
-			gameRunning = false; // add tests later.
 		}
 	}
 	window.~RenderWindow();
@@ -144,9 +143,6 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 		window.render(start);
 		window.render(quit);
 		window.display();
-		if (isTest) {
-			onMenu = false; // add tests later.
-		}
 	}
 	logoFont.unload();
 	startFont.unload();
@@ -427,9 +423,6 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		if (Mix_PlayingMusic() == 0)
 			gameRunning = false;
 
-		if (isTest) 
-			gameRunning = false; // add tests later.
-
 		SDL_Delay(75);
 	}
 	player.stopBackgroundMusic();
@@ -543,9 +536,6 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 		window.render(misses);
 		window.render(numMisses);
 		window.display();
-		if (isTest) {
-			gameRunning = true; // add tests later.
-		}
 	}
 }
 
