@@ -7,43 +7,22 @@ Meowstro is a C++ game project using SDL2 and related libraries. The project use
 
 - **C++17 compiler** (Visual Studio 2022, GCC, Clang)
 - **[CMake](https://cmake.org/download/)** (version 3.10 or higher)
-- **Platform-specific dependencies** (see below)
+- **Platform-specific dependencies** (see below and in DEPENDENCIES.md)
 
 ## Platform-Specific Setup
 
-### Ubuntu Linux
+All of my group uses Windows so that's the recommended OS but I will try to make Linux and MacOS work. I made it so those OS get tested in the GitHub Actions too so hopefully everything works with that.
 
-Install SDL2 and development tools from the system package manager:
+### Windows Setup
 
-```bash
-sudo apt-get update
-sudo apt-get install -y \
-    build-essential \
-    cmake \
-    pkg-config \
-    libsdl2-dev \
-    libsdl2-image-dev \
-    libsdl2-mixer-dev \
-    libsdl2-ttf-dev
-```
+Install [vcpkg](https://github.com/microsoft/vcpkg) and integrate it:
 
-Then build directly:
-```bash
-cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-cmake --build build
-```
-
-### Windows
-
-Install [vcpkg](https://github.com/microsoft/vcpkg) and use it to install the required libraries **with the `x64-windows` triplet**:
-
-```ps1
-# From the vcpkg directory
-.\vcpkg install sdl2 sdl2-image sdl2-mixer[mpg123] sdl2-ttf --triplet=x64-windows
+```powershell
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
 .\vcpkg integrate install
 ```
-
-> **Note:** You only need to run the `vcpkg install ...` command when you add or change dependencies, or set up vcpkg for the first time.
 
 Copy `build.default.bat` to `build.bat` (Command Prompt) or `build.default.ps1` to `build.ps1` (PowerShell), update the vcpkg path, then:
 
@@ -61,6 +40,30 @@ Both scripts will:
 - Build the Debug configuration
 
 > The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
+
+### Ubuntu Linux
+
+Install SDL2 and development tools from the system package manager:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
+    libsdl2-dev \
+    libsdl2-image-dev \
+    libsdl2-mixer-dev \
+    libsdl2-ttf-dev
+    
+# Note: Requires SDL2 2.32.2, SDL2_image 2.8.8, SDL2_mixer 2.8.1, SDL2_ttf 2.24.0
+```
+
+Then build directly:
+```bash
+cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build
+```
 
 ### macOS
 
@@ -89,10 +92,10 @@ After building, run the executable:
 
 > The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
 
-## Additional Tools Used
+## Additional Tools Used in GitHub Actions
 
-- **cppcheck**: Static analysis
-- **clang-tidy**: Advanced linting
+- **cppcheck**
+- **clang-tidy**
 
 ## Adding Files
 
@@ -125,6 +128,7 @@ set(HEADERS
 │   │-- fonts/             # Font files
 │   │-- images/            # Image files
 │-- build/                 # CMake build files (includes build/bin/Debug and build/bin/Release)
+|-- cmake/                 # copy_if_exists.cmake location
 │-- docs/                  # Project documentation
 │   │-- design_notes.md
 │   │-- how_to_play.md
@@ -132,10 +136,13 @@ set(HEADERS
 │-- src/                   # Source files
 │-- .gitattributes         # Git attributes file
 │-- .gitignore             # Git ignore file
+│-- build.default.bat      # Windows batch default build script
+│-- build.default.ps1      # Windows PowerShell default build script
+│-- build.default.sh       # macOS/Linux default build script
 │-- CMakeLists.txt         # Main CMake build script
+|-- DEPENDENCIES.md        # List of dependencies/versions used
 │-- LICENSE                # Project LICENSE
 │-- README.md              # Project README
-│-- build.ps1              # Windows PowerShell build script
-│-- build.default.bat      # Windows batch build script
-│-- build.default.sh       # macOS/Linux build script
+|-- vcpkg.json             # JSON file w/ dependencies & versions used in vcpkg install
+
 ```

@@ -9,18 +9,26 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # fallback
 
+# Tested versions - other versions use at your own risk
+set(TESTED_SDL2_VERSION "2.32.2")
+set(TESTED_SDL2_IMAGE_VERSION "2.8.8")
+set(TESTED_SDL2_MIXER_VERSION "2.8.1")
+set(TESTED_SDL2_TTF_VERSION "2.24.0")
+
 # Try vcpkg first, then fall back to system packages
-find_package(SDL2 CONFIG QUIET)
+find_package(SDL2 ${TESTED_SDL2_VERSION} CONFIG QUIET)
 if(NOT SDL2_FOUND)
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(SDL2 REQUIRED sdl2)
-    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image)
-    pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer)
-    pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf)
+    pkg_check_modules(SDL2 REQUIRED sdl2>=${TESTED_SDL2_VERSION})
+    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image>=${TESTED_SDL2_IMAGE_VERSION})
+    pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer>=${TESTED_SDL2_MIXER_VERSION})
+    pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf>=${TESTED_SDL2_TTF_VERSION})
+    
+    message(STATUS "Using system SDL2 packages with minimum versions: SDL2 ${TESTED_SDL2_VERSION}, SDL2_image ${TESTED_SDL2_IMAGE_VERSION}, SDL2_mixer ${TESTED_SDL2_MIXER_VERSION}, SDL2_ttf ${TESTED_SDL2_TTF_VERSION}")
 else()
-    find_package(SDL2_image CONFIG REQUIRED)
-    find_package(SDL2_mixer CONFIG REQUIRED)
-    find_package(SDL2_ttf CONFIG REQUIRED)
+    find_package(SDL2_image ${TESTED_SDL2_IMAGE_VERSION} CONFIG REQUIRED)
+    find_package(SDL2_mixer ${TESTED_SDL2_MIXER_VERSION} CONFIG REQUIRED)
+    find_package(SDL2_ttf ${TESTED_SDL2_TTF_VERSION} CONFIG REQUIRED)
 endif()
 
 set(SOURCES
