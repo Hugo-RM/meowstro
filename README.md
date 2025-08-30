@@ -56,7 +56,7 @@ sudo apt-get install -y \
     libsdl2-mixer-dev \
     libsdl2-ttf-dev
     
-# Note: Requires SDL2 2.32.2, SDL2_image 2.8.8, SDL2_mixer 2.8.1, SDL2_ttf 2.24.0
+# Note: Requires SDL2 2.28.2+, SDL2_image 2.8.8+, SDL2_mixer 2.8.1+, SDL2_ttf 2.24.0+
 ```
 
 Then build directly:
