@@ -28,11 +28,16 @@ jobs:
           key: vcpkg-windows-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
             vcpkg-windows-
-      - name: Configure CMake with compile commands
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      - name: Build Project
-        run: cmake --build build --parallel 4
+      - name: Prepare build.ps1 from build.default.ps1
+        shell: pwsh
+        run: |
+          Copy-Item build.default.ps1 build.ps1
+          (Get-Content build.ps1) -replace '^\$VCPKG_PATH\s*=.*', '$VCPKG_PATH = "${{ env.VCPKG_ROOT }}"' | Set-Content build.ps1
+
+      - name: Build Project (PowerShell)
+        shell: pwsh
+        run: ./build.ps1
 
       - name: Run Executable
         working-directory: build/bin/Debug
@@ -43,38 +48,36 @@ jobs:
           if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
             choco install cppcheck -y
           }
-          # Use full path since PATH might not be refreshed
           $cppcheck = if (Get-Command cppcheck -ErrorAction SilentlyContinue) { "cppcheck" } else { "C:\Program Files\Cppcheck\cppcheck.exe" }
-          
-          # Configure cppcheck with proper include paths and suppress system header warnings  
           & $cppcheck --enable=all --inconclusive --std=c++17 --quiet `
             --suppress=missingIncludeSystem `
             --suppress=missingInclude `
             -I include `
             -I "${{ env.VCPKG_ROOT }}/installed/x64-windows/include" `
             src
+
       - name: Run clang-tidy (static analysis)
         run: |
           if (!(Get-Command clang-tidy -ErrorAction SilentlyContinue)) {
             choco install llvm -y
           }
-          # Use the compilation database that CMake generated
           if (Test-Path "build/compile_commands.json") {
             clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
           } else {
             Write-Host "No compilation database found, skipping clang-tidy"
           }
+
       - name: Run ctest (unit tests)
         run: |
           cd build
           ctest --output-on-failure || echo "No tests configured"
+
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: meowstro-windows
           path: build/bin/Debug/
-
 
   build-linux:
     runs-on: ubuntu-latest

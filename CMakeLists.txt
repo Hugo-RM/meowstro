@@ -4,7 +4,10 @@ project(Meowstro VERSION 2.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# Set output directory to bin/Debug or bin/Release depending on build type
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # fallback
 
 # Try vcpkg first, then fall back to system packages
 find_package(SDL2 CONFIG QUIET)
@@ -84,10 +87,10 @@ add_custom_command(TARGET meowstro POST_BUILD
 # Create a copy of compile_commands.json in the project root for IDE support
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
     add_custom_target(copy_compile_commands ALL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${CMAKE_BINARY_DIR}/compile_commands.json
-            ${CMAKE_SOURCE_DIR}/compile_commands.json
+        COMMAND ${CMAKE_COMMAND} -Dsrc="${CMAKE_BINARY_DIR}/compile_commands.json" -Ddst="${CMAKE_SOURCE_DIR}/compile_commands.json" -P "${CMAKE_SOURCE_DIR}/cmake/copy_if_exists.cmake"
+        BYPRODUCTS ${CMAKE_SOURCE_DIR}/compile_commands.json
         DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-        COMMENT "Copying compile_commands.json to project root"
+        COMMENT "Copying compile_commands.json to project root if it exists"
+        VERBATIM
     )
 endif()

@@ -35,23 +35,32 @@ cmake --build build
 
 ### Windows
 
-Install [vcpkg](https://github.com/microsoft/vcpkg) and use it to install the required libraries:
+Install [vcpkg](https://github.com/microsoft/vcpkg) and use it to install the required libraries **with the `x64-windows` triplet**:
 
-```cmd
+```ps1
 # From the vcpkg directory
-.\vcpkg install sdl2 sdl2-image sdl2-mixer[mpg123] sdl2-ttf
+.\vcpkg install sdl2 sdl2-image sdl2-mixer[mpg123] sdl2-ttf --triplet=x64-windows
 .\vcpkg integrate install
 ```
 
-Copy `build.default.bat` to `build.bat` (Command Prompt) and update the vcpkg path, then:
+> **Note:** You only need to run the `vcpkg install ...` command when you add or change dependencies, or set up vcpkg for the first time.
+
+Copy `build.default.bat` to `build.bat` (Command Prompt) or `build.default.ps1` to `build.ps1` (PowerShell), update the vcpkg path, then:
+
 ```cmd
 .\build.bat
 ```
-
-For Powershell, do the same process but with the `build.default.ps1` file:
+or
 ```ps1
 .\build.ps1
 ```
+
+Both scripts will:
+- Configure the project using the Visual Studio generator (`-G "Visual Studio 17 2022" -A x64`)
+- Use the vcpkg toolchain file
+- Build the Debug configuration
+
+> The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
 
 ### macOS
 
@@ -75,7 +84,10 @@ Personal build scripts contain system-specific paths and are ignored in `.gitign
 
 After building, run the executable:
 
-- **All platforms**: `./build/bin/Debug/meowstro` (with `.exe` on Windows)
+- **Debug build (default):** `./build/bin/Debug/meowstro` (add `.exe` on Windows)
+- **Release build:** `./build/bin/Release/meowstro` (add `.exe` on Windows)
+
+> The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
 
 ## Additional Tools Used
 
@@ -112,7 +124,7 @@ set(HEADERS
 │   │-- audio/             # Audio files
 │   │-- fonts/             # Font files
 │   │-- images/            # Image files
-│-- build/                 # CMake build files (includes build/bin/Debug)
+│-- build/                 # CMake build files (includes build/bin/Debug and build/bin/Release)
 │-- docs/                  # Project documentation
 │   │-- design_notes.md
 │   │-- how_to_play.md

@@ -181,14 +181,15 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 	Sprite fisher(300, 200, fisherTexture, 1, 2);
 	Sprite boat(150, 350, boatTexture, 1, 1);
 	Sprite hook(430, 215, hookTexture, 1, 1);
-	std::vector<Sprite> fish; 
+	std::vector<Sprite> fish;
+	fish.reserve(NUM_OF_BEATS);
 	std::unordered_set<int> fishHits; // index of fish hit
 	std::unordered_map<int, Uint32> fishHitTimes; // index -> time of hit
 	std::unordered_map<int, bool> fishHitTypes; // index -> false (Good), true (Perfect)
-	
-	for (int i = 0; i < 25; i++)
+
+	for (int i = 0; i < NUM_OF_BEATS; ++i)
 	{
-		fish.push_back(Sprite(FISH_START_X_LOCS[i], 720, fishTextures[rand() % 3], 1, 6));
+		fish.emplace_back(Sprite(FISH_START_X_LOCS[i], 720, fishTextures[rand() % 3], 1, 6));
 	}
 
 	const double travelDuration = 2000.0; // ms before beat to start moving
@@ -405,7 +406,8 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 			// Move and render normal fish
 			fish[i].moveLeft(15);
-			window.render(fish[i]++);
+			window.render(fish[i]);
+			fish[i]++;
 			if (fish[i].getCol() == 4)
 				fish[i].resetFrame(); // dead fish frames were 4 and on
 		}
