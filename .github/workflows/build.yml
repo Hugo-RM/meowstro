@@ -25,12 +25,12 @@ jobs:
             ${{ env.VCPKG_ROOT }}/installed
             ${{ env.VCPKG_ROOT }}/packages
             ${{ env.VCPKG_ROOT }}/buildtrees
-          key: vcpkg-windows-${{ hashFiles('vcpkg.json') }}
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json') }}
           restore-keys: |
-            vcpkg-windows-
+            vcpkg-${{ runner.os }}-
 
-      - name: Configure CMake with compile commands
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Configure CMake
+        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build Project
         run: cmake --build build --parallel 4
@@ -43,34 +43,21 @@ jobs:
         run: |
           if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
             choco install cppcheck -y
+            refreshenv
           }
-          # Use full path since PATH might not be refreshed
-          $cppcheck = if (Get-Command cppcheck -ErrorAction SilentlyContinue) { "cppcheck" } else { "C:\Program Files\Cppcheck\cppcheck.exe" }
-          
-          # Configure cppcheck with proper include paths and suppress system header warnings  
-          & $cppcheck --enable=all --inconclusive --std=c++17 --quiet `
-            --suppress=missingIncludeSystem `
-            --suppress=missingInclude `
-            -I include `
-            -I "${{ env.VCPKG_ROOT }}/installed/x64-windows/include" `
-            src
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet src include
 
       - name: Run clang-tidy (static analysis)
         run: |
-          if (!(Get-Command clang-tidy -ErrorAction SilentlyContinue)) {
-            choco install llvm -y
-          }
-          # Use the compilation database that CMake generated
-          if (Test-Path "build/compile_commands.json") {
-            clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
-          } else {
-            Write-Host "No compilation database found, skipping clang-tidy"
-          }
+          choco install llvm -y
+          refreshenv
+          cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
+          clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
 
       - name: Run ctest (unit tests)
         run: |
           cd build
-          ctest --output-on-failure || echo "No tests configured"
+          ctest --output-on-failure || true
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -85,29 +72,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install system dependencies
+      - name: Install SDL2 system packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            cppcheck \
+            clang-tidy
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
-
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.VCPKG_ROOT }}/installed
-            ${{ env.VCPKG_ROOT }}/packages
-            ${{ env.VCPKG_ROOT }}/buildtrees
-          key: vcpkg-linux-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-linux-
-
-      - name: Configure CMake with compile commands
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Configure CMake (system packages)
+        run: cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Build Project
         run: cmake --build build --parallel $(nproc)
@@ -118,17 +97,12 @@ jobs:
 
       - name: Run cppcheck (static analysis)
         run: |
-          sudo apt-get install -y cppcheck
           cppcheck --enable=all --inconclusive --std=c++17 --quiet \
-            --suppress=missingIncludeSystem \
-            --suppress=missingInclude \
             -I include \
-            -I "${{ env.VCPKG_ROOT }}/installed/x64-linux/include" \
             src
 
       - name: Run clang-tidy (static analysis)
         run: |
-          sudo apt-get install -y clang-tidy
           if [ -f "build/compile_commands.json" ]; then
             clang-tidy -p build $(find src -name '*.cpp')
           else
@@ -153,24 +127,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
+      - name: Install SDL2 via Homebrew
+        run: |
+          brew install \
+            sdl2 \
+            sdl2_image \
+            sdl2_mixer \
+            sdl2_ttf \
+            cppcheck \
+            llvm
 
-      - name: Cache vcpkg
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.VCPKG_ROOT }}/installed
-            ${{ env.VCPKG_ROOT }}/packages
-            ${{ env.VCPKG_ROOT }}/buildtrees
-          key: vcpkg-macos-${{ hashFiles('vcpkg.json') }}
-          restore-keys: |
-            vcpkg-macos-
-
-      - name: Configure CMake with compile commands
-        run: cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Configure CMake (Homebrew packages)
+        run: cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
       - name: Build Project
         run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
@@ -181,17 +149,14 @@ jobs:
 
       - name: Run cppcheck (static analysis)
         run: |
-          brew install cppcheck
           cppcheck --enable=all --inconclusive --std=c++17 --quiet \
             --suppress=missingIncludeSystem \
             --suppress=missingInclude \
             -I include \
-            -I "${{ env.VCPKG_ROOT }}/installed/x64-osx/include" \
             src
 
       - name: Run clang-tidy (static analysis)
         run: |
-          brew install llvm
           if [ -f "build/compile_commands.json" ]; then
             $(brew --prefix llvm)/bin/clang-tidy -p build $(find src -name '*.cpp')
           else

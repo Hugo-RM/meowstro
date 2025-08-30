@@ -1,83 +1,102 @@
-
 # Meowstro - SDL2 Game Project
 
 ## Overview
-Meowstro is a C++ game project using SDL2 and related libraries. The project uses CMake for building and vcpkg for dependency management, making setup and development easy across platforms.
+Meowstro is a C++ game project using SDL2 and related libraries. The project uses CMake for building with platform-specific dependency management to optimize setup and development across different systems.
 
 ## Prerequisites
 
-- **Visual Studio 2022** (or any C++17 compiler)
+- **C++17 compiler** (Visual Studio 2022, GCC, Clang)
 - **[CMake](https://cmake.org/download/)** (version 3.10 or higher)
-- **[vcpkg](https://github.com/microsoft/vcpkg)** (for dependency management)
+- **Platform-specific dependencies** (see below)
 
-## Setup Instructions
+## Platform-Specific Setup
 
-### 1. Install Dependencies
+### Ubuntu Linux
+
+Install SDL2 and development tools from the system package manager:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
+    libsdl2-dev \
+    libsdl2-image-dev \
+    libsdl2-mixer-dev \
+    libsdl2-ttf-dev
+```
+
+Then build directly:
+```bash
+cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build
+```
+
+### Windows
 
 Install [vcpkg](https://github.com/microsoft/vcpkg) and use it to install the required libraries:
 
-```sh
+```cmd
 # From the vcpkg directory
-./vcpkg install sdl2 sdl2-image sdl2-mixer[mpg123] sdl2-ttf
-./vcpkg integrate install
+.\vcpkg install sdl2 sdl2-image sdl2-mixer[mpg123] sdl2-ttf
+.\vcpkg integrate install
 ```
 
-### 2. Build the Project
+Copy `build.default.bat` to `build.bat` (Command Prompt) and update the vcpkg path, then:
+```cmd
+.\build.bat
+```
 
-Copy the build.default files and update the path for vcpkg to be accurate. 
+For Powershell, do the same process but with the `build.default.ps1` file:
+```ps1
+.\build.ps1
+```
 
-Personal build scripts will contain personal paths which are not helpful for others. It is why they are ignored in the `.gitignore`. 
+### macOS
 
-Then use the provided script for your platform:
+Homebrew:
+```bash
+brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
+cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build
+```
 
-- **Windows (PowerShell):**
-    ```sh
-    ./build.ps1
-    ```
-- **Windows (Batch):**
-    ```bat
-    build.bat
-    ```
-- **macOS/Linux:**
-    ```sh
-    ./build.sh
-    ```
+## Build Scripts
 
-This will configure and build the project using CMake and vcpkg.
+For convenience, platform-specific build scripts are provided:
 
-### 3. Run the Game
+- **Windows**: `build.bat` or `build.ps1` (copy from `build.default.bat` and `build.default.ps1`)
+- **Linux/macOS**: `build.sh` (copy from `build.default.sh`)
 
-After building, run the executable from the build output directory:
+Personal build scripts contain system-specific paths and are ignored in `.gitignore`.
 
-- **Windows:**
-    ```sh
-    ./build/bin/Debug/meowstro.exe
-    ```
-- **macOS/Linux:**
-    ```sh
-    ./build/bin/Debug/meowstro
-    ```
+## Running the Game
 
-Or, open the solution file in Visual Studio (`build/Meowstro.sln`), set `meowstro` as the startup project, and run it.
+After building, run the executable:
 
-### 4. Add Files
+- **All platforms**: `./build/bin/Debug/meowstro` (with `.exe` on Windows)
 
-After the files are correctly placed in their directories, you must update the `CMakeLists.txt` file so that they are included in the build:
+## Additional Tools Used
+
+- **cppcheck**: Static analysis
+- **clang-tidy**: Advanced linting
+
+## Adding Files
+
+Update `CMakeLists.txt` when adding new source files:
 
 ```cmake
-# Define Source Files
 set(SOURCES
-    src/file_1.cpp
-    src/file_2.cpp
-    ...
-    src/file_X.cpp
+    src/existing_file.cpp
+    src/new_file.cpp  # Add here
+    # ...
 )
 
-# Define Header Files
 set(HEADERS
-    include/file_1.hpp
-    ...
-    include/file_X.hpp
+    include/existing_file.hpp
+    include/new_file.hpp  # Add here
+    # ...
 )
 ```
 
@@ -108,8 +127,3 @@ set(HEADERS
 │-- build.default.bat      # Windows batch build script
 │-- build.default.sh       # macOS/Linux build script
 ```
-
-## Contribution Guidelines
-- Use vcpkg to add new dependencies and document them in the README.
-- If modifying build configuration, ensure compatibility with Windows and cross-platform builds.
-- Follow C++ best practices and maintain code clarity.
