@@ -44,8 +44,11 @@ jobs:
           if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
             choco install cppcheck -y
           }
-          # Configure cppcheck with proper include paths and suppress system header warnings
-          cppcheck --enable=all --inconclusive --std=c++17 --quiet `
+          # Use full path since PATH might not be refreshed
+          $cppcheck = if (Get-Command cppcheck -ErrorAction SilentlyContinue) { "cppcheck" } else { "C:\Program Files\Cppcheck\cppcheck.exe" }
+          
+          # Configure cppcheck with proper include paths and suppress system header warnings  
+          & $cppcheck --enable=all --inconclusive --std=c++17 --quiet `
             --suppress=missingIncludeSystem `
             --suppress=missingInclude `
             -I include `
