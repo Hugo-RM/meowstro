@@ -169,13 +169,17 @@ jobs:
             llvm
 
       - name: Configure CMake (Homebrew packages)
-        run: cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: |
+          HOMEBREW_PREFIX=$(brew --prefix)
+          cmake -B build -S . \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_PREFIX_PATH="$HOMEBREW_PREFIX"
 
       - name: Build Project
         run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
 
       - name: Run Executable
-        working-directory: build/bin/Debug
+        working-directory: build/bin
         run: ./meowstro --test
 
       - name: Run cppcheck (static analysis)
