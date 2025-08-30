@@ -18,15 +18,18 @@ jobs:
         with:
           vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
 
-      - name: Cache vcpkg
+      - name: Cache vcpkg packages
         uses: actions/cache@v4
         with:
           path: |
+            build/vcpkg_installed
             ${{ env.VCPKG_ROOT }}/installed
             ${{ env.VCPKG_ROOT }}/packages
             ${{ env.VCPKG_ROOT }}/buildtrees
-          key: vcpkg-windows-${{ hashFiles('vcpkg.json') }}
+            ${{ env.VCPKG_ROOT }}/downloads
+          key: vcpkg-windows-${{ hashFiles('vcpkg.json') }}-${{ hashFiles('CMakeLists.txt') }}
           restore-keys: |
+            vcpkg-windows-${{ hashFiles('vcpkg.json') }}-
             vcpkg-windows-
 
       - name: Prepare build.ps1 from build.default.ps1
