@@ -21,12 +21,13 @@
 #include "Font.hpp"
 #include "ResourceManager.hpp"
 #include "GameConfig.hpp"
+#include "InputHandler.hpp"
 
 bool isTest = false;
 
-void mainMenu(RenderWindow& window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event);
-void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats);
-void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats);
+void mainMenu(RenderWindow& window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event, InputHandler& inputHandler);
+void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats, InputHandler& inputHandler);
+void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats, InputHandler& inputHandler);
 
 std::string formatScore(int score);
 
@@ -46,6 +47,7 @@ int main(int argc, char** argv)
 	const auto& windowConfig = config.getWindowConfig();
 	RenderWindow window(windowConfig.title, windowConfig.width, windowConfig.height, windowConfig.flags);
 	ResourceManager resourceManager(window.getRenderer());
+	InputHandler inputHandler;
 
 	srand(static_cast<unsigned int>(time(NULL)));
 	bool gameRunning = true;
@@ -54,12 +56,12 @@ int main(int argc, char** argv)
 
 	while (gameRunning)
 	{
-		mainMenu(window, resourceManager, gameRunning, event);
+		mainMenu(window, resourceManager, gameRunning, event, inputHandler);
 		if (gameRunning)
 		{
-			gameLoop(window, resourceManager, gameRunning, event, stats);
+			gameLoop(window, resourceManager, gameRunning, event, stats, inputHandler);
 			std::cout << stats;
-			endScreen(window, resourceManager, gameRunning, event, stats);
+			endScreen(window, resourceManager, gameRunning, event, stats, inputHandler);
 			stats.resetStats();
 		}
 	}
@@ -70,7 +72,7 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event)
+void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event, InputHandler& inputHandler)
 {
 	const auto& config = GameConfig::getInstance();
 	const auto& assetPaths = config.getAssetPaths();
@@ -78,7 +80,7 @@ void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &game
 	const auto& visualConfig = config.getVisualConfig();
 	
 	bool onMenu = true;
-	bool option = false;
+	bool option = false; // false = start, true = quit
 	
 	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.YELLOW);
 	SDL_Texture* startTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuButtons, "START", visualConfig.YELLOW);
@@ -96,40 +98,36 @@ void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &game
 	{
 		while (SDL_PollEvent(&event))
 		{
-			switch (event.type)
-			{
-			case SDL_KEYDOWN:
-			{
-				switch (event.key.keysym.sym) // input
-				{
-				case SDLK_ESCAPE:
-				{
+			InputAction action = inputHandler.processInput(event, GameState::MainMenu);
+			
+			switch (action) {
+				case InputAction::Quit:
 					onMenu = false;
 					gameRunning = false;
 					break;
-				}
-				case SDLK_SPACE:
-				{
+					
+				case InputAction::Select:
 					onMenu = false;
-					gameRunning = (option) ? false : true; // op0 = start op1 = exit
+					gameRunning = !option; // false = start game, true = quit
 					break;
-				}
-				case SDLK_UP:
-				case SDLK_DOWN:
-				{
-					option = (option) ? false : true;
+					
+				case InputAction::MenuUp:
+				case InputAction::MenuDown:
+					option = !option; // Toggle between start/quit
 					break;
-				}
-				}
-			}
+					
+				case InputAction::None:
+				default:
+					break;
 			}
 		}
+		
 		window.clear();
-		// if represents selected option render location
+		// Position selector based on current option
 		if (option)
-			selectCat.setLoc(760, 775);
+			selectCat.setLoc(760, 775); // Quit position
 		else
-			selectCat.setLoc(760, 600);
+			selectCat.setLoc(760, 600); // Start position
 		
 		window.render(selectCat);
 		window.render(logoCat);
@@ -140,7 +138,7 @@ void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &game
 	}
 }
 
-void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
+void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats, InputHandler& inputHandler)
 {
 	auto& config = GameConfig::getInstance();
 	config.initializeBeatTimings(); // Initialize beat timings
@@ -215,11 +213,9 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 
 	const std::vector<double>& noteBeats = gameplayConfig.noteBeats;
 
-	const Uint8* state = SDL_GetKeyboardState(NULL);
-
 	while (gameRunning)
 	{
-		if (state[SDL_SCANCODE_SPACE]) //Checks the current state of the key and if true it makes the bool to be true (making it not work) unless not press down
+		if (inputHandler.isKeyPressed(SDL_SCANCODE_SPACE)) //Checks the current state of the key and if true it makes the bool to be true (making it not work) unless not press down
 			keydown = true;
 
 		double currentTime = SDL_GetTicks() - songStartTime; //calculates the delay by comparing the current ticks and when the song starts
@@ -238,11 +234,13 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		
 		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) { //Exit key, stop the game
+			InputAction action = inputHandler.processInput(event, GameState::Playing);
+			
+			if (action == InputAction::Quit) {
 				gameRunning = false;
 				break;
 			}
-			else if (!keydown && event.key.keysym.sym == SDLK_SPACE) { // Space and down arrow are use to hit or make the clicks
+			else if (action == InputAction::Select && !keydown) { // Space key for rhythm timing
 				if (!isThrowing)
 				{
 					thrown = true;
@@ -422,7 +420,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 	player.stopBackgroundMusic();
 }
 
-void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
+void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats, InputHandler& inputHandler)
 {
 	const auto& config = GameConfig::getInstance();
 	const auto& assetPaths = config.getAssetPaths();
@@ -467,29 +465,24 @@ void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gam
 	{
 		while (SDL_PollEvent(&event))
 		{
-			switch (event.type)
-			{
-			case SDL_KEYDOWN:
-			{
-				switch (event.key.keysym.sym)
-				{
-				case SDLK_ESCAPE:
-				{
+			InputAction action = inputHandler.processInput(event, GameState::EndScreen);
+			
+			switch (action) {
+				case InputAction::Escape:
+					return; // Return to main menu
+					
+				case InputAction::Select:
+					gameRunning = !option; // false = retry, true = quit
 					return;
-				}
-				case SDLK_SPACE:
-				{
-					gameRunning = (option) ? false : true; // op0 = retry op1 = exit
-					return;
-				}
-				case SDLK_UP:
-				case SDLK_DOWN:
-				{
-					option = !option;
+					
+				case InputAction::MenuUp:
+				case InputAction::MenuDown:
+					option = !option; // Toggle between retry/quit
 					break;
-				}
-				}
-			}
+					
+				case InputAction::None:
+				default:
+					break;
 			}
 		}
 		window.clear();

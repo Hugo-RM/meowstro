@@ -42,6 +42,7 @@ set(SOURCES
     src/GameStats.cpp
     src/ResourceManager.cpp
     src/GameConfig.cpp
+    src/InputHandler.cpp
 )
 
 set(HEADERS
@@ -54,6 +55,7 @@ set(HEADERS
     include/GameStats.hpp
     include/ResourceManager.hpp
     include/GameConfig.hpp
+    include/InputHandler.hpp
 )
 
 add_executable(meowstro ${SOURCES} ${HEADERS})
