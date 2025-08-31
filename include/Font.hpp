@@ -5,13 +5,8 @@ Description: Font class, handles the logic when rendering a true type font text 
 */
 #ifndef FONT_H
 #define FONT_H
-/*
-It is very important to note that I didn't download the necessary library (ttf) in order to work.
-Nor have I downloaded the font that we decided to use for the project, that being Comic Sans.
-As I was literally passing out while writing this because it was so late and rarely have time.
-This also explains why there is no driver file to test, again, passing out, so hypothetically this should work.
-*/
-#include <SDL.h> // Not sure if this needs to be .hpp, again, verge of passing out
+
+#include <SDL.h>
 #include <SDL_ttf.h>
 #include <string>
 
@@ -21,7 +16,7 @@ class Font
 {
     public:
         Font(); // Basic Constructor 
-        ~Font(); // Destructor (fancy)
+        ~Font(); // Destructor
         bool load(const string& fontPath, int fontSz); // Allows us to add a font file
         void unload(); // Clean up (or unload) the font
 

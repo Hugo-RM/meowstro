@@ -19,6 +19,7 @@
 #include "Sprite.hpp"
 #include "Audio.hpp"
 #include "Font.hpp"
+#include "ResourceManager.hpp"
 
 const char* comicSans = "./assets/fonts/Comic Sans MS.ttf";
 const int NUM_OF_BEATS = 25;
@@ -32,9 +33,9 @@ const int FISH_START_X_LOCS[NUM_OF_BEATS] = { 1352, 2350, 2465, 2800, 3145,
 
 bool isTest = false;
 
-void mainMenu(RenderWindow& window, bool &gameRunning, SDL_Event &event);
-void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats);
-void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats);
+void mainMenu(RenderWindow& window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event);
+void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats);
+void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats);
 
 std::string formatScore(int score);
 
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
 		std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
 
 	RenderWindow window("Meowstro", 1920, 1080, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	ResourceManager resourceManager(window.getRenderer());
 
 	srand(static_cast<unsigned int>(time(NULL)));
 	bool gameRunning = true;
@@ -59,16 +61,15 @@ int main(int argc, char** argv)
 
 	while (gameRunning)
 	{
-		mainMenu(window, gameRunning, event);
+		mainMenu(window, resourceManager, gameRunning, event);
 		if (gameRunning)
 		{
-			gameLoop(window, gameRunning, event, stats);
+			gameLoop(window, resourceManager, gameRunning, event, stats);
 			std::cout << stats;
-			endScreen(window, gameRunning, event, stats);
+			endScreen(window, resourceManager, gameRunning, event, stats);
 			stats.resetStats();
 		}
 	}
-	// Destructor will be called automatically when window goes out of scope
 
 	TTF_Quit();
 	SDL_Quit();
@@ -76,21 +77,16 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
+void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event)
 {
-	Font logoFont, startFont, quitFont;
 	bool onMenu = true;
 	bool option = false;
 	
-	logoFont.load(comicSans, 75);
-	startFont.load(comicSans, 55);
-	quitFont.load(comicSans, 65);
-	
-	SDL_Texture* quitTexture = quitFont.renderText(window.getRenderer(), "QUIT", YELLOW);
-	SDL_Texture* startTexture = startFont.renderText(window.getRenderer(), "START", YELLOW);
-	SDL_Texture* logoTexture = logoFont.renderText(window.getRenderer(), "MEOWSTRO", YELLOW);
-	SDL_Texture* logoCatTexture = window.loadTexture("./assets/images/menu_cat.png");
-	SDL_Texture* selectedTexture = window.loadTexture("./assets/images/select_cat.png");
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(comicSans, 65, "QUIT", YELLOW);
+	SDL_Texture* startTexture = resourceManager.createTextTexture(comicSans, 55, "START", YELLOW);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(comicSans, 75, "MEOWSTRO", YELLOW);
+	SDL_Texture* logoCatTexture = resourceManager.loadTexture("./assets/images/menu_cat.png");
+	SDL_Texture* selectedTexture = resourceManager.loadTexture("./assets/images/select_cat.png");
 	
 	Entity quit(850, 800, quitTexture);
 	Entity logo(715, 350, logoTexture);
@@ -144,42 +140,26 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 		window.render(quit);
 		window.display();
 	}
-	
-	SDL_DestroyTexture(quitTexture);
-	SDL_DestroyTexture(startTexture);
-	SDL_DestroyTexture(logoTexture);
-	SDL_DestroyTexture(logoCatTexture);
-	SDL_DestroyTexture(selectedTexture);
-	
-	logoFont.unload();
-	startFont.unload();
-	quitFont.unload();
 }
 
-void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats)
+void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
 {
 	static int bpm = 147;
 	int fishStartX = 1920;
 
-	Font scoreFont, numberFont, perfectHitFont, goodHitFont;
-	scoreFont.load(comicSans, 40);
-	numberFont.load(comicSans, 35);
-	perfectHitFont.load(comicSans, 30);
-	goodHitFont.load(comicSans, 30);
-
-	// Textures
+	// Textures loaded via ResourceManager
 	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
-	fishTextures[0] = window.loadTexture("./assets/images/blue_fish.png");
-	fishTextures[1] = window.loadTexture("./assets/images/green_fish.png");
-	fishTextures[2] = window.loadTexture("./assets/images/gold_fish.png");
-	SDL_Texture* oceanTexture = window.loadTexture("./assets/images/Ocean.png");
-	SDL_Texture* boatTexture = window.loadTexture("./assets/images/boat.png");
-	SDL_Texture* fisherTexture = window.loadTexture("./assets/images/fisher.png");
-	SDL_Texture* hookTexture = window.loadTexture("./assets/images/hook.png");
-	SDL_Texture* scoreTexture = scoreFont.renderText(window.getRenderer(), "SCORE", { 0, 0, 0, 255 });
-	SDL_Texture* numberTexture = numberFont.renderText(window.getRenderer(), "000000", { 0, 0, 0, 255 });
-	SDL_Texture* perfectHitTexture = perfectHitFont.renderText(window.getRenderer(), "1000", { 255, 0, 0, 255 });
-	SDL_Texture* goodHitTexture = goodHitFont.renderText(window.getRenderer(), "500", { 255, 0, 0, 255 });
+	fishTextures[0] = resourceManager.loadTexture("./assets/images/blue_fish.png");
+	fishTextures[1] = resourceManager.loadTexture("./assets/images/green_fish.png");
+	fishTextures[2] = resourceManager.loadTexture("./assets/images/gold_fish.png");
+	SDL_Texture* oceanTexture = resourceManager.loadTexture("./assets/images/Ocean.png");
+	SDL_Texture* boatTexture = resourceManager.loadTexture("./assets/images/boat.png");
+	SDL_Texture* fisherTexture = resourceManager.loadTexture("./assets/images/fisher.png");
+	SDL_Texture* hookTexture = resourceManager.loadTexture("./assets/images/hook.png");
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(comicSans, 40, "SCORE", { 0, 0, 0, 255 });
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(comicSans, 35, "000000", { 0, 0, 0, 255 });
+	SDL_Texture* perfectHitTexture = resourceManager.createTextTexture(comicSans, 30, "1000", { 255, 0, 0, 255 });
+	SDL_Texture* goodHitTexture = resourceManager.createTextTexture(comicSans, 30, "500", { 255, 0, 0, 255 });
 
 	// Sprites & Background
 	Entity ocean(0, 0, oceanTexture);
@@ -245,15 +225,12 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 		double currentTime = SDL_GetTicks() - songStartTime; //calculates the delay by comparing the current ticks and when the song starts
 
-		// Only update score texture when score actually changes to prevent memory leaks
+		// Only update score texture when score actually changes
 		static int lastScore = -1;
 		int currentScore = stats.getScore();
 		if (currentScore != lastScore) {
-			if (lastScore != -1) {
-				SDL_DestroyTexture(numberTexture); // Clean up old texture
-			}
 			std::string strNum = formatScore(currentScore);
-			numberTexture = numberFont.renderText(window.getRenderer(), strNum, { 0, 0, 0, 255 });
+			numberTexture = resourceManager.createTextTexture(comicSans, 35, strNum, { 0, 0, 0, 255 });
 			number.setTexture(numberTexture);
 			lastScore = currentScore;
 		}
@@ -262,11 +239,11 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		
 		while (SDL_PollEvent(&event))
 		{
-			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) { //Exit key, stop the geames
+			if (event.type == SDL_QUIT || event.key.keysym.sym == SDLK_ESCAPE) { //Exit key, stop the game
 				gameRunning = false;
 				break;
 			}
-			else if (!keydown && event.key.keysym.sym == SDLK_SPACE) { //Space and down arrow are use to hit or make the clicks
+			else if (!keydown && event.key.keysym.sym == SDLK_SPACE) { // Space and down arrow are use to hit or make the clicks
 				if (!isThrowing)
 				{
 					thrown = true;
@@ -444,63 +421,27 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		SDL_Delay(75);
 	}
 	player.stopBackgroundMusic();
-	
-	// Clean up game loop textures to prevent memory leaks
-	for (int i = 0; i < NUM_FISH_TEXTURES; i++) {
-		SDL_DestroyTexture(fishTextures[i]);
-	}
-	SDL_DestroyTexture(oceanTexture);
-	SDL_DestroyTexture(boatTexture);
-	SDL_DestroyTexture(fisherTexture);
-	SDL_DestroyTexture(hookTexture);
-	SDL_DestroyTexture(scoreTexture);
-	SDL_DestroyTexture(numberTexture);
-	SDL_DestroyTexture(perfectHitTexture);
-	SDL_DestroyTexture(goodHitTexture);
-	
-	scoreFont.unload();
-	numberFont.unload();
-	perfectHitFont.unload();
-	goodHitFont.unload();
 }
 
-void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats)
+void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
 {
 	bool option = false;
-	Font logoFont, retryFont, quitFont,
-		statsFont, scoreFont, numberFont, 
-		hitsFont, numHitsFont, accuracyFont,
-		accPercentFont, missFont, numMissFont;
 
-	logoFont.load(comicSans, 75);
-	retryFont.load(comicSans, 65);
-	quitFont.load(comicSans, 65);
-	
-	statsFont.load(comicSans, 55);
-	scoreFont.load(comicSans, 40);
-	numberFont.load(comicSans, 40);
-	hitsFont.load(comicSans, 40);
-	numHitsFont.load(comicSans, 40);
-	accuracyFont.load(comicSans, 40);
-	accPercentFont.load(comicSans, 40);
-	missFont.load(comicSans, 40);
-	numMissFont.load(comicSans, 40);
+	SDL_Texture* statsTexture = resourceManager.createTextTexture(comicSans, 55, "GAME STATS", YELLOW);
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(comicSans, 40, "SCORE", YELLOW);
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(comicSans, 40, formatScore(stats.getScore()), YELLOW);
+	SDL_Texture* hitsTexture = resourceManager.createTextTexture(comicSans, 40, "HITS", YELLOW);
+	SDL_Texture* numHitsTexture = resourceManager.createTextTexture(comicSans, 40, std::to_string(stats.getHits()), YELLOW);
+	SDL_Texture* accuracyTexture = resourceManager.createTextTexture(comicSans, 40, "ACCURACY", YELLOW);
+	SDL_Texture* accPercentTexture = resourceManager.createTextTexture(comicSans, 40, (std::to_string(stats.getAccuracy()) + "%"), YELLOW);
+	SDL_Texture* missTexture = resourceManager.createTextTexture(comicSans, 40, "MISSES", YELLOW);
+	SDL_Texture* numMissTexture = resourceManager.createTextTexture(comicSans, 40, std::to_string(stats.getMisses()), YELLOW);
 
-	SDL_Texture* statsTexture = statsFont.renderText(window.getRenderer(), "GAME STATS", YELLOW);
-	SDL_Texture* scoreTexture = scoreFont.renderText(window.getRenderer(), "SCORE", YELLOW);
-	SDL_Texture* numberTexture = numberFont.renderText(window.getRenderer(), formatScore(stats.getScore()), YELLOW);
-	SDL_Texture* hitsTexture = hitsFont.renderText(window.getRenderer(), "HITS", YELLOW);
-	SDL_Texture* numHitsTexture = numHitsFont.renderText(window.getRenderer(), std::to_string(stats.getHits()), YELLOW);
-	SDL_Texture* accuracyTexture = accuracyFont.renderText(window.getRenderer(), "ACCURACY", YELLOW);
-	SDL_Texture* accPercentTexture = accPercentFont.renderText(window.getRenderer(), (std::to_string(stats.getAccuracy()) + "%"), YELLOW);
-	SDL_Texture* missTexture = missFont.renderText(window.getRenderer(), "MISSES", YELLOW);
-	SDL_Texture* numMissTexture = numMissFont.renderText(window.getRenderer(), std::to_string(stats.getMisses()), YELLOW);
-
-	SDL_Texture* quitTexture = quitFont.renderText(window.getRenderer(), "QUIT", YELLOW);
-	SDL_Texture* retryTexture = retryFont.renderText(window.getRenderer(), "RETRY", YELLOW);
-	SDL_Texture* logoTexture = logoFont.renderText(window.getRenderer(), "MEOWSTRO", YELLOW);
-	SDL_Texture* selectedTexture = window.loadTexture("./assets/images/select_cat.png");
-	SDL_Texture* logoCatTexture = window.loadTexture("./assets/images/menu_cat.png");
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(comicSans, 65, "QUIT", YELLOW);
+	SDL_Texture* retryTexture = resourceManager.createTextTexture(comicSans, 65, "RETRY", YELLOW);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(comicSans, 75, "MEOWSTRO", YELLOW);
+	SDL_Texture* selectedTexture = resourceManager.loadTexture("./assets/images/select_cat.png");
+	SDL_Texture* logoCatTexture = resourceManager.loadTexture("./assets/images/menu_cat.png");
 	
 	Entity titleStats(785, 325, statsTexture);
 	Entity score(650, 400, scoreTexture);
@@ -570,22 +511,6 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 		window.render(numMisses);
 		window.display();
 	}
-	
-	// Clean up end screen textures to prevent memory leaks
-	SDL_DestroyTexture(statsTexture);
-	SDL_DestroyTexture(scoreTexture);
-	SDL_DestroyTexture(numberTexture);
-	SDL_DestroyTexture(hitsTexture);
-	SDL_DestroyTexture(numHitsTexture);
-	SDL_DestroyTexture(accuracyTexture);
-	SDL_DestroyTexture(accPercentTexture);
-	SDL_DestroyTexture(missTexture);
-	SDL_DestroyTexture(numMissTexture);
-	SDL_DestroyTexture(quitTexture);
-	SDL_DestroyTexture(retryTexture);
-	SDL_DestroyTexture(logoTexture);
-	SDL_DestroyTexture(selectedTexture);
-	SDL_DestroyTexture(logoCatTexture);
 }
 
 std::string formatScore(int score)

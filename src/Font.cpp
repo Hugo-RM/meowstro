@@ -3,11 +3,11 @@
 
 using namespace std;
 
-Font::Font() : font(nullptr) {} // Init ptr 2 nullptr
+Font::Font() : font(nullptr) {}
        
 Font::~Font()
 {
-    unload(); // Makin sure memory is nice n tidy
+    unload();
 }
 
 bool Font::load(const string& fontPath, int fontSz)

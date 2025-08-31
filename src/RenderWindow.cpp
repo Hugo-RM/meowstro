@@ -13,17 +13,6 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags) 
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
 }
-
-SDL_Texture *RenderWindow::loadTexture(const char *filePath)
-{
-	SDL_Texture *texture = NULL;
-	texture = IMG_LoadTexture(renderer, filePath);
-
-	if (texture == NULL)
-		std::cout << "IMG_LoadTexture failed. ERROR: " << SDL_GetError() << std::endl;
-
-	return texture;
-}
 void RenderWindow::clear()
 {
 	SDL_RenderClear(renderer);

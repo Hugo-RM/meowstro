@@ -40,6 +40,7 @@ set(SOURCES
     src/Font.cpp
     src/Sprite.cpp
     src/GameStats.cpp
+    src/ResourceManager.cpp
 )
 
 set(HEADERS
@@ -50,6 +51,7 @@ set(HEADERS
     include/Font.hpp
     include/Sprite.hpp
     include/GameStats.hpp
+    include/ResourceManager.hpp
 )
 
 add_executable(meowstro ${SOURCES} ${HEADERS})
