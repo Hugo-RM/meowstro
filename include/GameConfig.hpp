@@ -12,7 +12,7 @@ public:
     
     // Game window settings
     struct WindowConfig {
-        std::string title = "Meowstro";
+        const char *title = "Meowstro";
         int width = 1920;
         int height = 1080;
         Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
@@ -27,9 +27,9 @@ public:
     
     // Visual settings
     struct VisualConfig {
-        SDL_Color menuTextColor = { 255, 255, 100, 255 }; // YELLOW
-        SDL_Color gameTextColor = { 0, 0, 0, 255 };       // BLACK
-        SDL_Color scoreTextColor = { 255, 0, 0, 255 };    // RED
+        const SDL_Color YELLOW = { 255, 255, 100, 255 };
+        const SDL_Color BLACK = { 0, 0, 0, 255 };
+        const SDL_Color RED = { 255, 0, 0, 255 };
         int frameDelay = 75; // SDL_Delay value
     };
     

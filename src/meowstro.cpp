@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 
 	const auto& config = GameConfig::getInstance();
 	const auto& windowConfig = config.getWindowConfig();
-	RenderWindow window(windowConfig.title.c_str(), windowConfig.width, windowConfig.height, windowConfig.flags);
+	RenderWindow window(windowConfig.title, windowConfig.width, windowConfig.height, windowConfig.flags);
 	ResourceManager resourceManager(window.getRenderer());
 
 	srand(static_cast<unsigned int>(time(NULL)));
@@ -80,9 +80,9 @@ void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &game
 	bool onMenu = true;
 	bool option = false;
 	
-	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.menuTextColor);
-	SDL_Texture* startTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuButtons, "START", visualConfig.menuTextColor);
-	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.menuTextColor);
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.YELLOW);
+	SDL_Texture* startTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuButtons, "START", visualConfig.YELLOW);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.YELLOW);
 	SDL_Texture* logoCatTexture = resourceManager.loadTexture(assetPaths.menuCatTexture);
 	SDL_Texture* selectedTexture = resourceManager.loadTexture(assetPaths.selectCatTexture);
 	
@@ -162,10 +162,10 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 	SDL_Texture* boatTexture = resourceManager.loadTexture(assetPaths.boatTexture);
 	SDL_Texture* fisherTexture = resourceManager.loadTexture(assetPaths.fisherTexture);
 	SDL_Texture* hookTexture = resourceManager.loadTexture(assetPaths.hookTexture);
-	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.gameTextColor);
-	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, "000000", visualConfig.gameTextColor);
-	SDL_Texture* perfectHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "1000", visualConfig.scoreTextColor);
-	SDL_Texture* goodHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "500", visualConfig.scoreTextColor);
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.BLACK);
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, "000000", visualConfig.BLACK);
+	SDL_Texture* perfectHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "1000", visualConfig.RED);
+	SDL_Texture* goodHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "500", visualConfig.RED);
 
 	// Sprites & Background
 	Entity ocean(0, 0, oceanTexture);
@@ -229,7 +229,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		int currentScore = stats.getScore();
 		if (currentScore != lastScore) {
 			std::string strNum = formatScore(currentScore);
-			numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, strNum, visualConfig.gameTextColor);
+			numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, strNum, visualConfig.BLACK);
 			number.setTexture(numberTexture);
 			lastScore = currentScore;
 		}
@@ -265,9 +265,9 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 					
 					double expected = noteBeats[i];
 					double delta = fabs(currentTime - expected); //Calculates the gurrent gap for the hit
-					if (j == 0)
-						std::cout << "Delta: " << delta << std::endl;
-					j++;
+					// if (j == 0)
+					// 	std::cout << "Delta: " << delta << std::endl;
+					// j++;
 					if (delta <= gamePlay.getGOOD()) {
 						short int scoreType = gamePlay.checkHit(expected, currentTime); //This compares the time the SPACE or DOWN was pressed to the time it is requires for the PERFECT or GOOD or Miss
 						noteHitFlags[i] = true;
@@ -295,7 +295,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 
 			double noteTime = noteBeats[i];
 			if (currentTime > noteTime + gamePlay.getGOOD()) {
-				std::cout << std::endl << "miss" << std::endl << std::endl;
+				// std::cout << std::endl << "miss" << std::endl << std::endl;
 				stats--;
 				noteHitFlags[i] = true;
 			}
@@ -431,19 +431,19 @@ void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gam
 	
 	bool option = false;
 
-	SDL_Texture* statsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameStats, "GAME STATS", visualConfig.menuTextColor);
-	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.menuTextColor);
-	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, formatScore(stats.getScore()), visualConfig.menuTextColor);
-	SDL_Texture* hitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "HITS", visualConfig.menuTextColor);
-	SDL_Texture* numHitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getHits()), visualConfig.menuTextColor);
-	SDL_Texture* accuracyTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "ACCURACY", visualConfig.menuTextColor);
-	SDL_Texture* accPercentTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, (std::to_string(stats.getAccuracy()) + "%"), visualConfig.menuTextColor);
-	SDL_Texture* missTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "MISSES", visualConfig.menuTextColor);
-	SDL_Texture* numMissTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getMisses()), visualConfig.menuTextColor);
+	SDL_Texture* statsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameStats, "GAME STATS", visualConfig.YELLOW);
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.YELLOW);
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, formatScore(stats.getScore()), visualConfig.YELLOW);
+	SDL_Texture* hitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "HITS", visualConfig.YELLOW);
+	SDL_Texture* numHitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getHits()), visualConfig.YELLOW);
+	SDL_Texture* accuracyTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "ACCURACY", visualConfig.YELLOW);
+	SDL_Texture* accPercentTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, (std::to_string(stats.getAccuracy()) + "%"), visualConfig.YELLOW);
+	SDL_Texture* missTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "MISSES", visualConfig.YELLOW);
+	SDL_Texture* numMissTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getMisses()), visualConfig.YELLOW);
 
-	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.menuTextColor);
-	SDL_Texture* retryTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "RETRY", visualConfig.menuTextColor);
-	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.menuTextColor);
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.YELLOW);
+	SDL_Texture* retryTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "RETRY", visualConfig.YELLOW);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.YELLOW);
 	SDL_Texture* selectedTexture = resourceManager.loadTexture(assetPaths.selectCatTexture);
 	SDL_Texture* logoCatTexture = resourceManager.loadTexture(assetPaths.menuCatTexture);
 	
