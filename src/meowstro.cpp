@@ -20,16 +20,7 @@
 #include "Audio.hpp"
 #include "Font.hpp"
 #include "ResourceManager.hpp"
-
-const char* comicSans = "./assets/fonts/Comic Sans MS.ttf";
-const int NUM_OF_BEATS = 25;
-const int NUM_FISH_TEXTURES = 3;
-const SDL_Color YELLOW = { 255, 255, 100, 255 };
-const int FISH_START_X_LOCS[NUM_OF_BEATS] = { 1352, 2350, 2465, 2800, 3145,
-											  3330, 3480, 3663, 4175, 4560,
-											  4816, 5245, 6059, 6260, 6644,
-											  6885, 7100, 7545, 7801, 8230,
-											  8775, 9145, 9531, 9829, 10160 };
+#include "GameConfig.hpp"
 
 bool isTest = false;
 
@@ -51,7 +42,9 @@ int main(int argc, char** argv)
 	if (TTF_Init() == -1)
 		std::cerr << "TTF_Init failed: " << TTF_GetError() << std::endl;
 
-	RenderWindow window("Meowstro", 1920, 1080, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+	const auto& config = GameConfig::getInstance();
+	const auto& windowConfig = config.getWindowConfig();
+	RenderWindow window(windowConfig.title.c_str(), windowConfig.width, windowConfig.height, windowConfig.flags);
 	ResourceManager resourceManager(window.getRenderer());
 
 	srand(static_cast<unsigned int>(time(NULL)));
@@ -79,14 +72,19 @@ int main(int argc, char** argv)
 
 void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &gameRunning, SDL_Event &event)
 {
+	const auto& config = GameConfig::getInstance();
+	const auto& assetPaths = config.getAssetPaths();
+	const auto& fontSizes = config.getFontSizes();
+	const auto& visualConfig = config.getVisualConfig();
+	
 	bool onMenu = true;
 	bool option = false;
 	
-	SDL_Texture* quitTexture = resourceManager.createTextTexture(comicSans, 65, "QUIT", YELLOW);
-	SDL_Texture* startTexture = resourceManager.createTextTexture(comicSans, 55, "START", YELLOW);
-	SDL_Texture* logoTexture = resourceManager.createTextTexture(comicSans, 75, "MEOWSTRO", YELLOW);
-	SDL_Texture* logoCatTexture = resourceManager.loadTexture("./assets/images/menu_cat.png");
-	SDL_Texture* selectedTexture = resourceManager.loadTexture("./assets/images/select_cat.png");
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.menuTextColor);
+	SDL_Texture* startTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuButtons, "START", visualConfig.menuTextColor);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.menuTextColor);
+	SDL_Texture* logoCatTexture = resourceManager.loadTexture(assetPaths.menuCatTexture);
+	SDL_Texture* selectedTexture = resourceManager.loadTexture(assetPaths.selectCatTexture);
 	
 	Entity quit(850, 800, quitTexture);
 	Entity logo(715, 350, logoTexture);
@@ -144,22 +142,30 @@ void mainMenu(RenderWindow &window, ResourceManager& resourceManager, bool &game
 
 void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
 {
-	static int bpm = 147;
+	auto& config = GameConfig::getInstance();
+	config.initializeBeatTimings(); // Initialize beat timings
+	
+	const auto& assetPaths = config.getAssetPaths();
+	const auto& fontSizes = config.getFontSizes();
+	const auto& visualConfig = config.getVisualConfig();
+	const auto& audioConfig = config.getAudioConfig();
+	const auto& gameplayConfig = config.getGameplayConfig();
+	
 	int fishStartX = 1920;
 
 	// Textures loaded via ResourceManager
-	SDL_Texture* fishTextures[NUM_FISH_TEXTURES];
-	fishTextures[0] = resourceManager.loadTexture("./assets/images/blue_fish.png");
-	fishTextures[1] = resourceManager.loadTexture("./assets/images/green_fish.png");
-	fishTextures[2] = resourceManager.loadTexture("./assets/images/gold_fish.png");
-	SDL_Texture* oceanTexture = resourceManager.loadTexture("./assets/images/Ocean.png");
-	SDL_Texture* boatTexture = resourceManager.loadTexture("./assets/images/boat.png");
-	SDL_Texture* fisherTexture = resourceManager.loadTexture("./assets/images/fisher.png");
-	SDL_Texture* hookTexture = resourceManager.loadTexture("./assets/images/hook.png");
-	SDL_Texture* scoreTexture = resourceManager.createTextTexture(comicSans, 40, "SCORE", { 0, 0, 0, 255 });
-	SDL_Texture* numberTexture = resourceManager.createTextTexture(comicSans, 35, "000000", { 0, 0, 0, 255 });
-	SDL_Texture* perfectHitTexture = resourceManager.createTextTexture(comicSans, 30, "1000", { 255, 0, 0, 255 });
-	SDL_Texture* goodHitTexture = resourceManager.createTextTexture(comicSans, 30, "500", { 255, 0, 0, 255 });
+	SDL_Texture* fishTextures[3];
+	fishTextures[0] = resourceManager.loadTexture(assetPaths.blueFishTexture);
+	fishTextures[1] = resourceManager.loadTexture(assetPaths.greenFishTexture);
+	fishTextures[2] = resourceManager.loadTexture(assetPaths.goldFishTexture);
+	SDL_Texture* oceanTexture = resourceManager.loadTexture(assetPaths.oceanTexture);
+	SDL_Texture* boatTexture = resourceManager.loadTexture(assetPaths.boatTexture);
+	SDL_Texture* fisherTexture = resourceManager.loadTexture(assetPaths.fisherTexture);
+	SDL_Texture* hookTexture = resourceManager.loadTexture(assetPaths.hookTexture);
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.gameTextColor);
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, "000000", visualConfig.gameTextColor);
+	SDL_Texture* perfectHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "1000", visualConfig.scoreTextColor);
+	SDL_Texture* goodHitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.hitFeedback, "500", visualConfig.scoreTextColor);
 
 	// Sprites & Background
 	Entity ocean(0, 0, oceanTexture);
@@ -169,30 +175,29 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 	Sprite boat(150, 350, boatTexture, 1, 1);
 	Sprite hook(430, 215, hookTexture, 1, 1);
 	std::vector<Sprite> fish;
-	fish.reserve(NUM_OF_BEATS);
+	fish.reserve(gameplayConfig.numBeats);
 	std::unordered_set<int> fishHits; // index of fish hit
 	std::unordered_map<int, Uint32> fishHitTimes; // index -> time of hit
 	std::unordered_map<int, bool> fishHitTypes; // index -> false (Good), true (Perfect)
 
-	for (int i = 0; i < NUM_OF_BEATS; ++i)
+	for (int i = 0; i < gameplayConfig.numBeats; ++i)
 	{
-		fish.emplace_back(Sprite(FISH_START_X_LOCS[i], 720, fishTextures[rand() % 3], 1, 6));
+		fish.emplace_back(Sprite(gameplayConfig.fishStartXLocations[i], 720, fishTextures[rand() % gameplayConfig.numFishTextures], 1, 6));
 	}
 
-	const double travelDuration = 2000.0; // ms before beat to start moving
 	float timeCounter = 0.0f;
 
 	int songStartTime = SDL_GetTicks(); //Gets current ticks for better
-	int throwDuration = 200; // for hook sprite
-	int hookTargetX = 650; // Fish location
-	int hookTargetY = 625; 
-	int fishTargetX = 660;
+	int throwDuration = gameplayConfig.throwDuration; // for hook sprite
+	int hookTargetX = gameplayConfig.hookTargetX; // Fish location
+	int hookTargetY = gameplayConfig.hookTargetY; 
+	int fishTargetX = gameplayConfig.fishTargetX;
 	int thrownTimer = 2; // for fisher sprite
 	int hookStartX;
 	int hookStartY;
 	int sway = 0;
 	int bob = 0;
-	int handX; // This cat is thor but with a spear hook thing
+	int handX; // Fisher's hand position for hook throwing
 	int handY; 
 	
 	bool isReturning = false; // for hook sprite 
@@ -204,17 +209,11 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 
 	Audio player;
 	AudioLogic gamePlay;
-	player.playBackgroundMusic("./assets/audio/meowstro_short_ver.mp3");
+	player.playBackgroundMusic(audioConfig.backgroundMusicPath);
 
-	std::vector<bool> noteHitFlags(49, false); //This bool checks for the continueity (if the note has passed) regardless of getting hit. Overall helping with syncing
+	std::vector<bool> noteHitFlags(gameplayConfig.numBeats * 2, false); //This bool checks for the continueity (if the note has passed) regardless of getting hit. Overall helping with syncing
 
-	std::vector<double> noteBeats = { //The vector contains the clicks in miliseconds
-	gamePlay.msFromMscs(0,3,46), gamePlay.msFromMscs(0,7,75), gamePlay.msFromMscs(0,9,38), gamePlay.msFromMscs(0,10,61), gamePlay.msFromMscs(0,12,24), gamePlay.msFromMscs(0,13,06),
-	gamePlay.msFromMscs(0,13,87), gamePlay.msFromMscs(0,15,30), gamePlay.msFromMscs(0,17,95), gamePlay.msFromMscs(0,20,0), gamePlay.msFromMscs(0,21,22), gamePlay.msFromMscs(0,23,26),
-	gamePlay.msFromMscs(0,27,14), gamePlay.msFromMscs(0,28,57), gamePlay.msFromMscs(0,30,40), gamePlay.msFromMscs(0,31,93), gamePlay.msFromMscs(0,32,65), gamePlay.msFromMscs(0,34,69),
-	gamePlay.msFromMscs(0,35,91), gamePlay.msFromMscs(0,37,95), gamePlay.msFromMscs(0,41,83), gamePlay.msFromMscs(0,43,26), gamePlay.msFromMscs(0,45,10), gamePlay.msFromMscs(0,46,52),
-	gamePlay.msFromMscs(0,48,57)
-	};
+	const std::vector<double>& noteBeats = gameplayConfig.noteBeats;
 
 	const Uint8* state = SDL_GetKeyboardState(NULL);
 
@@ -230,7 +229,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		int currentScore = stats.getScore();
 		if (currentScore != lastScore) {
 			std::string strNum = formatScore(currentScore);
-			numberTexture = resourceManager.createTextTexture(comicSans, 35, strNum, { 0, 0, 0, 255 });
+			numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameNumbers, strNum, visualConfig.gameTextColor);
 			number.setTexture(numberTexture);
 			lastScore = currentScore;
 		}
@@ -306,7 +305,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		timeCounter += 0.05;
 
 		// sways around sprites
-		for (int i = 0; i < NUM_OF_BEATS; i++)
+		for (int i = 0; i < gameplayConfig.numBeats; i++)
 		{
 			sway = static_cast<int>(sin(timeCounter + i) * 1.1);
 			bob = static_cast<int>(cos(timeCounter + i) * 1.1);
@@ -374,7 +373,7 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		Uint32 currentTicks = SDL_GetTicks();
 
 		// render fish
-		for (int i = 0; i < NUM_OF_BEATS; i++)
+		for (int i = 0; i < gameplayConfig.numBeats; i++)
 		{
 			if (fishHits.count(i)) 
 			{
@@ -418,30 +417,35 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 		if (Mix_PlayingMusic() == 0)
 			gameRunning = false;
 
-		SDL_Delay(75);
+		SDL_Delay(visualConfig.frameDelay);
 	}
 	player.stopBackgroundMusic();
 }
 
 void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats)
 {
+	const auto& config = GameConfig::getInstance();
+	const auto& assetPaths = config.getAssetPaths();
+	const auto& fontSizes = config.getFontSizes();
+	const auto& visualConfig = config.getVisualConfig();
+	
 	bool option = false;
 
-	SDL_Texture* statsTexture = resourceManager.createTextTexture(comicSans, 55, "GAME STATS", YELLOW);
-	SDL_Texture* scoreTexture = resourceManager.createTextTexture(comicSans, 40, "SCORE", YELLOW);
-	SDL_Texture* numberTexture = resourceManager.createTextTexture(comicSans, 40, formatScore(stats.getScore()), YELLOW);
-	SDL_Texture* hitsTexture = resourceManager.createTextTexture(comicSans, 40, "HITS", YELLOW);
-	SDL_Texture* numHitsTexture = resourceManager.createTextTexture(comicSans, 40, std::to_string(stats.getHits()), YELLOW);
-	SDL_Texture* accuracyTexture = resourceManager.createTextTexture(comicSans, 40, "ACCURACY", YELLOW);
-	SDL_Texture* accPercentTexture = resourceManager.createTextTexture(comicSans, 40, (std::to_string(stats.getAccuracy()) + "%"), YELLOW);
-	SDL_Texture* missTexture = resourceManager.createTextTexture(comicSans, 40, "MISSES", YELLOW);
-	SDL_Texture* numMissTexture = resourceManager.createTextTexture(comicSans, 40, std::to_string(stats.getMisses()), YELLOW);
+	SDL_Texture* statsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameStats, "GAME STATS", visualConfig.menuTextColor);
+	SDL_Texture* scoreTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "SCORE", visualConfig.menuTextColor);
+	SDL_Texture* numberTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, formatScore(stats.getScore()), visualConfig.menuTextColor);
+	SDL_Texture* hitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "HITS", visualConfig.menuTextColor);
+	SDL_Texture* numHitsTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getHits()), visualConfig.menuTextColor);
+	SDL_Texture* accuracyTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "ACCURACY", visualConfig.menuTextColor);
+	SDL_Texture* accPercentTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, (std::to_string(stats.getAccuracy()) + "%"), visualConfig.menuTextColor);
+	SDL_Texture* missTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, "MISSES", visualConfig.menuTextColor);
+	SDL_Texture* numMissTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.gameScore, std::to_string(stats.getMisses()), visualConfig.menuTextColor);
 
-	SDL_Texture* quitTexture = resourceManager.createTextTexture(comicSans, 65, "QUIT", YELLOW);
-	SDL_Texture* retryTexture = resourceManager.createTextTexture(comicSans, 65, "RETRY", YELLOW);
-	SDL_Texture* logoTexture = resourceManager.createTextTexture(comicSans, 75, "MEOWSTRO", YELLOW);
-	SDL_Texture* selectedTexture = resourceManager.loadTexture("./assets/images/select_cat.png");
-	SDL_Texture* logoCatTexture = resourceManager.loadTexture("./assets/images/menu_cat.png");
+	SDL_Texture* quitTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "QUIT", visualConfig.menuTextColor);
+	SDL_Texture* retryTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.quitButton, "RETRY", visualConfig.menuTextColor);
+	SDL_Texture* logoTexture = resourceManager.createTextTexture(assetPaths.fontPath, fontSizes.menuLogo, "MEOWSTRO", visualConfig.menuTextColor);
+	SDL_Texture* selectedTexture = resourceManager.loadTexture(assetPaths.selectCatTexture);
+	SDL_Texture* logoCatTexture = resourceManager.loadTexture(assetPaths.menuCatTexture);
 	
 	Entity titleStats(785, 325, statsTexture);
 	Entity score(650, 400, scoreTexture);
@@ -481,7 +485,7 @@ void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gam
 				case SDLK_UP:
 				case SDLK_DOWN:
 				{
-					option = (option) ? false : true;
+					option = !option;
 					break;
 				}
 				}

@@ -2,12 +2,11 @@
 //Desc: .cpp for displaying game statistics
 #include "GameStats.hpp"
 #include <iostream>
-using namespace std;
 
 GameStats::GameStats()
 {
 	score = 0;
-	combo = 0; //willing to drop combo 
+	combo = 0; // Combo system currently unused 
 	hits = 0;
 	misses = 0;
 	accuracy = 0.0;
@@ -15,14 +14,14 @@ GameStats::GameStats()
 GameStats::GameStats(int score, int combo, int hits, int misses) //takes in hits and misses to calculate accuracy
 {
 	setScore(score); 
-	setCombo(combo); //cut
+	setCombo(combo);
 	accuracy = (hits > 0) ? (static_cast<double>(hits) / (hits + misses)) * 100.0 : 0.0; // (1 - %ofMisses) * 100 = accuracy 
 }
 void GameStats::setScore(int score)
 {
 	this->score = score;
 }
-void GameStats::setCombo(int combo) //old yeller this
+void GameStats::setCombo(int combo)
 {
 	this->combo = combo;
 }
@@ -42,7 +41,7 @@ int GameStats::getScore()const
 {
 	return score;
 }
-int GameStats::getCombo()const //this too
+int GameStats::getCombo()const
 {
 	return combo;
 }
@@ -70,19 +69,19 @@ void GameStats::resetStats()
 	setMisses(0);
 	setAccuracy(0);
 }
-ostream& operator << (ostream& out, const GameStats& s) //displays stats at end of game
+std::ostream& operator << (std::ostream& out, const GameStats& s) //displays stats at end of game
 {
-	out << "-*Final Stats!*-" << endl;
+	out << "-*Final Stats!*-" << std::endl;
 	out << "Score: " << s.getScore() << "!!!\n";
-	out << "Combo: " << s.getCombo() << endl;
-	out << "Accuracy: " << s.getAccuracy() << endl;
+	out << "Combo: " << s.getCombo() << std::endl;
+	out << "Accuracy: " << s.getAccuracy() << std::endl;
 	if (s.getAccuracy() < 50.0)
 	{
-		out << "Oh.. thats kinda bad.." << endl;
+		out << "Oh.. thats kinda bad.." << std::endl;
 	}
 	else
 	{
-		out << "Well done!" << endl;
+		out << "Well done!" << std::endl;
 	}
 	return out;
 }

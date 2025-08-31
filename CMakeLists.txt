@@ -41,6 +41,7 @@ set(SOURCES
     src/Sprite.cpp
     src/GameStats.cpp
     src/ResourceManager.cpp
+    src/GameConfig.cpp
 )
 
 set(HEADERS
@@ -52,6 +53,7 @@ set(HEADERS
     include/Sprite.hpp
     include/GameStats.hpp
     include/ResourceManager.hpp
+    include/GameConfig.hpp
 )
 
 add_executable(meowstro ${SOURCES} ${HEADERS})
