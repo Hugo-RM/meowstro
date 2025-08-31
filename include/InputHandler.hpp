@@ -14,7 +14,8 @@ enum class InputAction {
 enum class GameState {
     MainMenu,
     Playing,
-    EndScreen
+    EndScreen,
+    Quit
 };
 
 class InputHandler

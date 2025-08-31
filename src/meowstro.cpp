@@ -22,6 +22,7 @@
 #include "ResourceManager.hpp"
 #include "GameConfig.hpp"
 #include "InputHandler.hpp"
+#include "GameStateManager.hpp"
 
 bool isTest = false;
 
@@ -50,21 +51,10 @@ int main(int argc, char** argv)
 	InputHandler inputHandler;
 
 	srand(static_cast<unsigned int>(time(NULL)));
-	bool gameRunning = true;
-	GameStats stats;
-	SDL_Event event;
-
-	while (gameRunning)
-	{
-		mainMenu(window, resourceManager, gameRunning, event, inputHandler);
-		if (gameRunning)
-		{
-			gameLoop(window, resourceManager, gameRunning, event, stats, inputHandler);
-			std::cout << stats;
-			endScreen(window, resourceManager, gameRunning, event, stats, inputHandler);
-			stats.resetStats();
-		}
-	}
+	
+	// Create the game state manager and run the game
+	GameStateManager gameStateManager(window, resourceManager, inputHandler);
+	gameStateManager.run();
 
 	TTF_Quit();
 	SDL_Quit();
@@ -253,13 +243,13 @@ void gameLoop(RenderWindow& window, ResourceManager& resourceManager, bool& game
 					hookTargetX = handX + 300;
 					hookTargetY = handY + 475;
 				}
-				int j = 0;
+				// int j = 0;
 				for (int i = 0; i < noteBeats.size(); ++i) {
-					if (noteHitFlags[i])
-					{
-						j = 0;
-						continue;
-					}
+					// if (noteHitFlags[i])
+					// {
+					// 	j = 0;
+					// 	continue;
+					// }
 					
 					double expected = noteBeats[i];
 					double delta = fabs(currentTime - expected); //Calculates the gurrent gap for the hit
