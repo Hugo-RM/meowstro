@@ -53,8 +53,6 @@ jobs:
           }
           $cppcheck = if (Get-Command cppcheck -ErrorAction SilentlyContinue) { "cppcheck" } else { "C:\Program Files\Cppcheck\cppcheck.exe" }
           & $cppcheck --enable=all --inconclusive --std=c++17 --quiet `
-            --suppress=missingIncludeSystem `
-            --suppress=missingInclude `
             -I include `
             -I "${{ env.VCPKG_ROOT }}/installed/x64-windows/include" `
             src
