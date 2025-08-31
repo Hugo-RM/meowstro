@@ -1,5 +1,5 @@
 // Names: Hugo, Jaime, Jay, Leo
-// Last Modified: 05/17/25
+// Last Modified: 08/30/25
 // Purpose: MEOWSTRO
 //
 //
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 			stats.resetStats();
 		}
 	}
-	window.~RenderWindow();
+	// Destructor will be called automatically when window goes out of scope
 
 	TTF_Quit();
 	SDL_Quit();
@@ -144,6 +144,13 @@ void mainMenu(RenderWindow &window, bool &gameRunning, SDL_Event &event)
 		window.render(quit);
 		window.display();
 	}
+	
+	SDL_DestroyTexture(quitTexture);
+	SDL_DestroyTexture(startTexture);
+	SDL_DestroyTexture(logoTexture);
+	SDL_DestroyTexture(logoCatTexture);
+	SDL_DestroyTexture(selectedTexture);
+	
 	logoFont.unload();
 	startFont.unload();
 	quitFont.unload();
@@ -238,9 +245,18 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 
 		double currentTime = SDL_GetTicks() - songStartTime; //calculates the delay by comparing the current ticks and when the song starts
 
-		std::string strNum = formatScore(stats.getScore());
-		numberTexture = numberFont.renderText(window.getRenderer(), strNum, { 0, 0, 0, 255 });
-		number.setTexture(numberTexture);
+		// Only update score texture when score actually changes to prevent memory leaks
+		static int lastScore = -1;
+		int currentScore = stats.getScore();
+		if (currentScore != lastScore) {
+			if (lastScore != -1) {
+				SDL_DestroyTexture(numberTexture); // Clean up old texture
+			}
+			std::string strNum = formatScore(currentScore);
+			numberTexture = numberFont.renderText(window.getRenderer(), strNum, { 0, 0, 0, 255 });
+			number.setTexture(numberTexture);
+			lastScore = currentScore;
+		}
 		handX = fisher.getX() + 135;
 		handY = fisher.getY() + 50;
 		
@@ -428,9 +444,24 @@ void gameLoop(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSta
 		SDL_Delay(75);
 	}
 	player.stopBackgroundMusic();
-	player.~Audio();
+	
+	// Clean up game loop textures to prevent memory leaks
+	for (int i = 0; i < NUM_FISH_TEXTURES; i++) {
+		SDL_DestroyTexture(fishTextures[i]);
+	}
+	SDL_DestroyTexture(oceanTexture);
+	SDL_DestroyTexture(boatTexture);
+	SDL_DestroyTexture(fisherTexture);
+	SDL_DestroyTexture(hookTexture);
+	SDL_DestroyTexture(scoreTexture);
+	SDL_DestroyTexture(numberTexture);
+	SDL_DestroyTexture(perfectHitTexture);
+	SDL_DestroyTexture(goodHitTexture);
+	
 	scoreFont.unload();
 	numberFont.unload();
+	perfectHitFont.unload();
+	goodHitFont.unload();
 }
 
 void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameStats& stats)
@@ -539,6 +570,22 @@ void endScreen(RenderWindow& window, bool& gameRunning, SDL_Event& event, GameSt
 		window.render(numMisses);
 		window.display();
 	}
+	
+	// Clean up end screen textures to prevent memory leaks
+	SDL_DestroyTexture(statsTexture);
+	SDL_DestroyTexture(scoreTexture);
+	SDL_DestroyTexture(numberTexture);
+	SDL_DestroyTexture(hitsTexture);
+	SDL_DestroyTexture(numHitsTexture);
+	SDL_DestroyTexture(accuracyTexture);
+	SDL_DestroyTexture(accPercentTexture);
+	SDL_DestroyTexture(missTexture);
+	SDL_DestroyTexture(numMissTexture);
+	SDL_DestroyTexture(quitTexture);
+	SDL_DestroyTexture(retryTexture);
+	SDL_DestroyTexture(logoTexture);
+	SDL_DestroyTexture(selectedTexture);
+	SDL_DestroyTexture(logoCatTexture);
 }
 
 std::string formatScore(int score)
