@@ -8,13 +8,6 @@ InputHandler::InputHandler()
 
 InputAction InputHandler::processInput(SDL_Event& event, GameState currentState)
 {
-    // Update space key state for rhythm timing
-    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_SPACE) {
-        spaceKeyDown = true;
-    } else if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_SPACE) {
-        spaceKeyDown = false;
-    }
-    
     // Handle SDL_QUIT universally
     if (event.type == SDL_QUIT) {
         return InputAction::Quit;
@@ -69,13 +62,19 @@ InputAction InputHandler::processGameInput(const SDL_Event& event)
             case SDLK_ESCAPE:
                 return InputAction::Quit;
             case SDLK_SPACE:
-                // if (!spaceKeyDown) { // Current main handles this but not ideal to have that logic in main
-                //     return InputAction::Select;
-                // }
-                return InputAction::Select;
-                break;
+                // Only process spacebar on initial press (not when held)
+                if (!spaceKeyDown) {
+                    spaceKeyDown = true;
+                    return InputAction::Select;
+                }
+                break; // Ignore repeated key events from holding
             default:
                 break;
+        }
+    }
+    else if (event.type == SDL_KEYUP) {
+        if (event.key.keysym.sym == SDLK_SPACE) {
+            spaceKeyDown = false; // Reset when space is released
         }
     }
     return InputAction::None;

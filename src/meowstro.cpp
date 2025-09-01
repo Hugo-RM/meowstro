@@ -4,6 +4,18 @@
 //
 //
 
+#include "GameStateManager.hpp"
+#include "ResourceManager.hpp"
+#include "InputHandler.hpp"
+#include "RenderWindow.hpp"
+#include "GameConfig.hpp"
+#include "AudioLogic.hpp"
+#include "GameStats.hpp"
+#include "Entity.hpp"
+#include "Sprite.hpp"
+#include "Audio.hpp"
+#include "Font.hpp"
+
 #include <unordered_map>
 #include <unordered_set>
 #include <iostream>
@@ -11,18 +23,6 @@
 #include <iomanip>
 #include <string>
 #include <random>
-
-#include "RenderWindow.hpp"
-#include "AudioLogic.hpp"
-#include "GameStats.hpp"
-#include "Entity.hpp"
-#include "Sprite.hpp"
-#include "Audio.hpp"
-#include "Font.hpp"
-#include "ResourceManager.hpp"
-#include "GameConfig.hpp"
-#include "InputHandler.hpp"
-#include "GameStateManager.hpp"
 
 bool isTest = false;
 

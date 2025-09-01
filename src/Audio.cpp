@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-Audio::Audio() {
+Audio::Audio() : bgMusic(nullptr) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         std::cerr << "Failed to initialize SDL audio: " << SDL_GetError() << std::endl;
         return;
@@ -15,10 +15,21 @@ Audio::Audio() {
     }
 }
 Audio::~Audio() {
+    if (bgMusic) {
+        Mix_FreeMusic(bgMusic);
+        bgMusic = nullptr;
+    }
     Mix_CloseAudio();
 }
 void Audio::playBackgroundMusic(const std::string& filePath) {
-    Mix_Music* bgMusic = Mix_LoadMUS(filePath.c_str());
+    // Free any existing music first
+    if (bgMusic) {
+        Mix_HaltMusic();
+        Mix_FreeMusic(bgMusic);
+        bgMusic = nullptr;
+    }
+    
+    bgMusic = Mix_LoadMUS(filePath.c_str());
     if (!bgMusic) {
         std::cerr << "Failed to load music file: " << Mix_GetError() << std::endl;
         return;
@@ -26,9 +37,14 @@ void Audio::playBackgroundMusic(const std::string& filePath) {
     if (Mix_PlayMusic(bgMusic, 0) < 0) {
         std::cerr << "Failed to play music: " << Mix_GetError() << std::endl;
         Mix_FreeMusic(bgMusic);
+        bgMusic = nullptr;
         return;
     }
 }
 void Audio::stopBackgroundMusic() {
     Mix_HaltMusic();
+    if (bgMusic) {
+        Mix_FreeMusic(bgMusic);
+        bgMusic = nullptr;
+    }
 }

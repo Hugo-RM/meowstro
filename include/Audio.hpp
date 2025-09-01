@@ -10,5 +10,8 @@ public:
 	~Audio();
 	void playBackgroundMusic(const std::string& filePath);
 	void stopBackgroundMusic();
+
+private:
+	Mix_Music* bgMusic;
 };
 

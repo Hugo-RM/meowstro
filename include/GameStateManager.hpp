@@ -1,8 +1,10 @@
 #pragma once
 
-#include <SDL.h>
 #include "InputHandler.hpp"
 #include "GameStats.hpp"
+#include "RhythmGame.hpp"
+
+#include <SDL.h>
 
 // Forward declarations
 class RenderWindow;
@@ -34,6 +36,7 @@ private:
     InputHandler& inputHandler;
     GameStats gameStats;
     SDL_Event event;
+    RhythmGame rhythmGame;
     
     // State transition methods
     void transitionTo(GameState newState);

@@ -15,6 +15,8 @@ GameStats::GameStats(int score, int combo, int hits, int misses) //takes in hits
 {
 	setScore(score); 
 	setCombo(combo);
+	setHits(hits);
+	setMisses(misses);
 	accuracy = (hits > 0) ? (static_cast<double>(hits) / (hits + misses)) * 100.0 : 0.0; // (1 - %ofMisses) * 100 = accuracy 
 }
 void GameStats::setScore(int score)

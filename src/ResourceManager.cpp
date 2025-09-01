@@ -1,4 +1,5 @@
 #include "ResourceManager.hpp"
+
 #include <iostream>
 
 ResourceManager::ResourceManager(SDL_Renderer* renderer) : renderer(renderer) {}
