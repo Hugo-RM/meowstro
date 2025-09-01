@@ -352,22 +352,25 @@ void RhythmGame::updateHookAnimation() {
             
             if (!m_isReturning) {
                 m_isReturning = true;
+                // Reset timer for return journey to avoid teleporting
+                m_throwStartTime = SDL_GetTicks();
                 // Swap start and target for return journey
                 std::swap(m_hookStartX, m_hookTargetX);
                 std::swap(m_hookStartY, m_hookTargetY);
+                // Recalculate progress for smooth transition
+                progress = 0.0f;
             }
             else {
                 m_isThrowing = false;
                 m_isReturning = false;
-                m_hook.setLoc(m_hookStartX, m_hookStartY);
+                m_hook.setLoc(m_hookStartX, m_hookStartY); // back to original location
             }
         }
         
-        if (m_isThrowing) {
-            int newX = static_cast<int>(m_hookStartX + (m_hookTargetX - m_hookStartX) * progress);
-            int newY = static_cast<int>(m_hookStartY + (m_hookTargetY - m_hookStartY) * progress);
-            m_hook.setLoc(newX, newY);
-        }
+        // Always update position during throwing (removed extra check)
+        int newX = static_cast<int>(m_hookStartX + (m_hookTargetX - m_hookStartX) * progress);
+        int newY = static_cast<int>(m_hookStartY + (m_hookTargetY - m_hookStartY) * progress);
+        m_hook.setLoc(newX, newY);
     }
 }
 
