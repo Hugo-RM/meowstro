@@ -8,6 +8,7 @@
 #include "Sprite.hpp"
 #include "Audio.hpp"
 #include "AudioLogic.hpp"
+#include "AnimationSystem.hpp"
 
 #include <vector>
 #include <unordered_set>
@@ -44,9 +45,13 @@ private:
     Audio m_audioPlayer;
     AudioLogic m_rhythmLogic;
     
+    // Animation system
+    AnimationSystem m_animationSystem;
+    HookAnimationState m_hookAnimationState;
+    FisherAnimationState m_fisherAnimationState;
+    
     // Game timing
     Uint32 m_songStartTime;
-    float m_timeCounter;
     std::vector<bool> m_noteHitFlags;
     
     // Game entities
@@ -69,18 +74,10 @@ private:
     std::unordered_map<int, Uint32> m_fishHitTimes;
     std::unordered_map<int, bool> m_fishHitTypes; // false = Good, true = Perfect
     
-    // Animation state
+    // Animation parameters
     int m_throwDuration;
     int m_hookTargetX;
     int m_hookTargetY;
-    int m_thrownTimer;
-    int m_hookStartX;
-    int m_hookStartY;
-    bool m_isReturning;
-    bool m_isThrowing;
-    bool m_keydown;
-    bool m_thrown;
-    Uint32 m_throwStartTime;
     
     // Textures
     SDL_Texture* m_fishTextures[3];
@@ -94,12 +91,8 @@ private:
     void initializeTextures();
     void initializeEntities();
     void initializeFish();
-    void updateTiming();
     void handleRhythmInput(double currentTime);
     void updateAnimations();
-    void updateHookAnimation();
-    void updateFisherAnimation();
-    void updateSwayEffects();
     void updateFishMovement();
     void checkMissedNotes(double currentTime);
     void renderFish(RenderWindow& window, Uint32 currentTicks);

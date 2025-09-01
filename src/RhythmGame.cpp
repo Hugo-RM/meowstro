@@ -12,7 +12,6 @@ RhythmGame::RhythmGame()
     : m_resourceManager(nullptr)
     , m_gameStats(nullptr)
     , m_songStartTime(0)
-    , m_timeCounter(0.0f)
     , m_ocean(0, 0, nullptr)
     , m_scoreLabel(0, 0, nullptr)
     , m_scoreNumber(0, 0, nullptr)
@@ -22,14 +21,6 @@ RhythmGame::RhythmGame()
     , m_throwDuration(0)
     , m_hookTargetX(0)
     , m_hookTargetY(0)
-    , m_thrownTimer(2)
-    , m_hookStartX(0)
-    , m_hookStartY(0)
-    , m_isReturning(false)
-    , m_isThrowing(false)
-    , m_keydown(false)
-    , m_thrown(false)
-    , m_throwStartTime(0)
     , m_perfectHitTexture(nullptr)
     , m_goodHitTexture(nullptr)
     , m_lastScore(-1)
@@ -54,18 +45,21 @@ void RhythmGame::initialize(RenderWindow& window, ResourceManager& resourceManag
     
     // Initialize timing
     m_songStartTime = SDL_GetTicks();
-    m_timeCounter = 0.0f;
     m_noteHitFlags.assign(gameplayConfig.numBeats * 2, false);
+    
+    // Initialize animation system
+    m_animationSystem.initialize();
     
     // Clear fish hit tracking data from previous game
     m_fishHits.clear();
     m_fishHitTimes.clear();
     m_fishHitTypes.clear();
     
-    // Initialize game parameters
+    // Initialize animation parameters
     m_throwDuration = gameplayConfig.throwDuration;
     m_hookTargetX = gameplayConfig.hookTargetX;
     m_hookTargetY = gameplayConfig.hookTargetY;
+    m_hookAnimationState.throwDuration = m_throwDuration;
     
     // Initialize textures and entities
     initializeTextures();
@@ -148,7 +142,8 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
         return false; // Game should end (ESC or window close)
     }
     
-    updateTiming();
+    // Update animation timing
+    m_animationSystem.updateTiming();
     
     double currentTime = SDL_GetTicks() - m_songStartTime;
     
@@ -182,9 +177,6 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
     return true; // Continue game
 }
 
-void RhythmGame::updateTiming() {
-    m_timeCounter += 0.05f;
-}
 
 void RhythmGame::handleRhythmInput(double currentTime) {
     const auto& config = GameConfig::getInstance();
@@ -192,19 +184,21 @@ void RhythmGame::handleRhythmInput(double currentTime) {
     const std::vector<double>& noteBeats = gameplayConfig.noteBeats;
     
     // Handle hook throwing
-    if (!m_isThrowing) {
-        m_thrown = true;
-        m_thrownTimer = 2;
-        m_isThrowing = true;
-        m_isReturning = false;
-        m_throwStartTime = SDL_GetTicks();
+    if (!m_hookAnimationState.isThrowing) {
+        // Start fisher animation
+        m_animationSystem.startFisherThrow(m_fisherAnimationState);
+        
+        // Start hook throwing
+        m_hookAnimationState.isThrowing = true;
+        m_hookAnimationState.isReturning = false;
+        m_hookAnimationState.throwStartTime = SDL_GetTicks();
         
         int handX = m_fisher.getX() + 135;
         int handY = m_fisher.getY() + 50;
-        m_hookStartX = handX;
-        m_hookStartY = handY;
-        m_hookTargetX = handX + 300;
-        m_hookTargetY = handY + 475;
+        m_hookAnimationState.hookStartX = handX;
+        m_hookAnimationState.hookStartY = handY;
+        m_hookAnimationState.hookTargetX = handX + 300;
+        m_hookAnimationState.hookTargetY = handY + 475;
     }
     
     // Check rhythm timing
@@ -268,16 +262,24 @@ void RhythmGame::updateScore() {
 }
 
 void RhythmGame::updateAnimations() {
-    updateSwayEffects();
-    updateFisherAnimation();
-    updateHookAnimation();
+    // Update fisher animation
+    m_animationSystem.updateFisherAnimation(m_fisher, m_fisherAnimationState);
+    
+    // Update hook animation
+    m_animationSystem.updateHookAnimation(m_hook, m_hookAnimationState);
+    
+    // Update sway effects
+    m_animationSystem.updateHookSway(m_hook, m_hookBasePosition, m_hookAnimationState);
+    m_animationSystem.updateSwayEffects(m_boat, m_boatBasePosition);
+    m_animationSystem.updateSwayEffects(m_fisher, m_fisherBasePosition);
+    m_animationSystem.updateSwayEffects(m_fish, m_fishBasePositions);
 }
 
 void RhythmGame::updateFishMovement() {
     const auto& config = GameConfig::getInstance();
     const auto& gameplayConfig = config.getGameplayConfig();
     
-    // Move and animate fish (only if not hit)
+    // Move fish (only if not hit)
     for (int i = 0; i < gameplayConfig.numBeats; i++) {
         if (m_fishHits.count(i)) {
             continue; // Skip hit fish
@@ -289,90 +291,22 @@ void RhythmGame::updateFishMovement() {
         // Update base position after movement (for sway effects)
         m_fishBasePositions[i].first = m_fish[i].getX();
         m_fishBasePositions[i].second = m_fish[i].getY();
-        
-        // Animate fish frames (same as original)
-        m_fish[i]++;
-        if (m_fish[i].getCol() == 4) {
-            m_fish[i].resetFrame();
-        }
     }
-}
-
-void RhythmGame::updateSwayEffects() {
-    const auto& config = GameConfig::getInstance();
-    const auto& gameplayConfig = config.getGameplayConfig();
     
-    // Apply sway effects to fish with individual offsets (like the original)
+    // Animate fish frames using animation system (for all fish including hit ones)
+    // The animation system will handle the frame updates
     for (int i = 0; i < gameplayConfig.numBeats; i++) {
-        int fishSway = static_cast<int>(sin(m_timeCounter + i) * 1.1);
-        int fishBob = static_cast<int>(cos(m_timeCounter + i) * 1.1);
-        
-        // Apply sway relative to base position (not accumulating)
-        m_fish[i].setLoc(m_fishBasePositions[i].first + fishSway, 
-                        m_fishBasePositions[i].second + fishBob);
-    }
-    
-    // Calculate common sway and bob for other sprites
-    int sway = static_cast<int>(sin(m_timeCounter) * 1.1);
-    int bob = static_cast<int>(cos(m_timeCounter) * 1.1);
-    
-    // Apply sway to other sprites (only when not performing special actions)
-    if (!m_isThrowing) {
-        m_hook.setLoc(m_hookBasePosition.first + sway, m_hookBasePosition.second + bob);
-    }
-    m_boat.setLoc(m_boatBasePosition.first + sway, m_boatBasePosition.second + bob);
-    m_fisher.setLoc(m_fisherBasePosition.first + sway, m_fisherBasePosition.second + bob);
-}
-
-void RhythmGame::updateFisherAnimation() {
-    // Hand throwing sprite animation
-    if (m_thrown) {
-        m_fisher.setFrame(1, 2);
-        m_thrownTimer--;
-        
-        if (m_thrownTimer <= 0) {
-            m_thrown = false;
-            m_fisher.setFrame(1, 1);
+        if (!m_fishHits.count(i)) {
+            m_fish[i]++;
+            if (m_fish[i].getCol() == 4) {
+                m_fish[i].resetFrame();
+            }
         }
-    }
-    else {
-        m_fisher.setFrame(1, 1);
     }
 }
 
-void RhythmGame::updateHookAnimation() {
-    // Hook throwing animation
-    if (m_isThrowing) {
-        Uint32 now = SDL_GetTicks();
-        Uint32 elapsed = now - m_throwStartTime;
-        
-        float progress = static_cast<float>(elapsed) / m_throwDuration;
-        if (progress >= 1.0f) {
-            progress = 1.0f;
-            
-            if (!m_isReturning) {
-                m_isReturning = true;
-                // Reset timer for return journey to avoid teleporting
-                m_throwStartTime = SDL_GetTicks();
-                // Swap start and target for return journey
-                std::swap(m_hookStartX, m_hookTargetX);
-                std::swap(m_hookStartY, m_hookTargetY);
-                // Recalculate progress for smooth transition
-                progress = 0.0f;
-            }
-            else {
-                m_isThrowing = false;
-                m_isReturning = false;
-                m_hook.setLoc(m_hookStartX, m_hookStartY); // back to original location
-            }
-        }
-        
-        // Always update position during throwing (removed extra check)
-        int newX = static_cast<int>(m_hookStartX + (m_hookTargetX - m_hookStartX) * progress);
-        int newY = static_cast<int>(m_hookStartY + (m_hookTargetY - m_hookStartY) * progress);
-        m_hook.setLoc(newX, newY);
-    }
-}
+
+
 
 void RhythmGame::render(RenderWindow& window) {
     window.clear();
