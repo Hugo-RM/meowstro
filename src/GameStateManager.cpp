@@ -5,10 +5,6 @@
 
 #include <iostream>
 
-// Forward declarations of the original functions 
-void mainMenu(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, InputHandler& inputHandler);
-void endScreen(RenderWindow& window, ResourceManager& resourceManager, bool& gameRunning, SDL_Event& event, GameStats& stats, InputHandler& inputHandler);
-
 GameStateManager::GameStateManager(RenderWindow& window, ResourceManager& resourceManager, InputHandler& inputHandler)
     : currentState(GameState::MainMenu)
     , nextState(GameState::MainMenu)
@@ -62,18 +58,18 @@ void GameStateManager::updateState()
 
 void GameStateManager::runMainMenu()
 {
-    bool gameRunning = true;
+    MenuResult result = menuSystem.runMainMenu(window, resourceManager, inputHandler);
     
-    // Use the existing mainMenu function
-    mainMenu(window, resourceManager, gameRunning, event, inputHandler);
-    
-    if (gameRunning) {
-        // Player selected START
-        resetGameStats();
-        transitionTo(GameState::Playing);
-    } else {
-        // Player selected QUIT or pressed ESC
-        transitionTo(GameState::Quit);
+    switch (result) {
+        case MenuResult::StartGame:
+            resetGameStats();
+            transitionTo(GameState::Playing);
+            break;
+        case MenuResult::QuitGame:
+            transitionTo(GameState::Quit);
+            break;
+        default:
+            break;
     }
 }
 
@@ -124,16 +120,21 @@ void GameStateManager::runGameplay()
 
 void GameStateManager::runEndScreen()
 {
-    bool gameRunning = false;
+    MenuResult result = menuSystem.runEndScreen(window, resourceManager, gameStats, inputHandler);
     
-    endScreen(window, resourceManager, gameRunning, event, gameStats, inputHandler);
-    
-    if (gameRunning) {
-        // Player selected RETRY
-        resetGameStats();
-        transitionTo(GameState::Playing);
-    } else {
-        transitionTo(GameState::Quit);
+    switch (result) {
+        case MenuResult::RetryGame:
+            resetGameStats();
+            transitionTo(GameState::Playing);
+            break;
+        case MenuResult::GoToMainMenu:
+            transitionTo(GameState::MainMenu);
+            break;
+        case MenuResult::QuitGame:
+            transitionTo(GameState::Quit);
+            break;
+        default:
+            break;
     }
 }
 

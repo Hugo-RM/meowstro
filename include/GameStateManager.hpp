@@ -3,6 +3,7 @@
 #include "InputHandler.hpp"
 #include "GameStats.hpp"
 #include "RhythmGame.hpp"
+#include "MenuSystem.hpp"
 
 #include <SDL.h>
 
@@ -37,6 +38,7 @@ private:
     GameStats gameStats;
     SDL_Event event;
     RhythmGame rhythmGame;
+    MenuSystem menuSystem;
     
     // State transition methods
     void transitionTo(GameState newState);
