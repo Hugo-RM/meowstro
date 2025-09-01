@@ -10,8 +10,10 @@ public:
 	~Audio();
 	void playBackgroundMusic(const std::string& filePath);
 	void stopBackgroundMusic();
+	bool isValid() const { return m_valid; }
 
 private:
 	Mix_Music* bgMusic;
+	bool m_valid;
 };
 

@@ -20,11 +20,15 @@ public:
     
     // Manual cleanup (called automatically in destructor)
     void cleanup();
+    
+    // Validity checking
+    bool isValid() const { return m_valid; }
 
 private:
     SDL_Renderer* renderer;
     std::unordered_map<std::string, SDL_Texture*> textures;
     std::unordered_map<std::string, Font*> fonts;
+    bool m_valid;
     
     // Helper to generate unique keys
     std::string generateFontKey(const std::string& fontPath, int fontSize) const;

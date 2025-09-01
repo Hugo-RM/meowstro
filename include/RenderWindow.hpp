@@ -15,9 +15,13 @@ public:
 	{
 		return renderer;
 	}
+	
+	bool isValid() const { return m_valid; }
+	
 private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;
+	bool m_valid;
 
 };
 

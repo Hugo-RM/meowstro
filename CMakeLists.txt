@@ -47,6 +47,7 @@ set(SOURCES
     src/RhythmGame.cpp
     src/MenuSystem.cpp
     src/AnimationSystem.cpp
+    src/Logger.cpp
 )
 
 set(HEADERS
@@ -64,6 +65,8 @@ set(HEADERS
     include/RhythmGame.hpp
     include/MenuSystem.hpp
     include/AnimationSystem.hpp
+    include/Logger.hpp
+    include/Exceptions.hpp
 )
 
 add_executable(meowstro ${SOURCES} ${HEADERS})
