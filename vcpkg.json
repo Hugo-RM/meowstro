@@ -18,6 +18,10 @@
     {
       "name": "sdl2-ttf",
       "version>=": "2.22.0"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.14.0"
     }
   ],
   "builtin-baseline": "5300a2a461a53b76405db4fcbe6aeb0eea43935d"

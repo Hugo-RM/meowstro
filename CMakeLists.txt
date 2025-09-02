@@ -4,6 +4,10 @@ project(Meowstro VERSION 2.0.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+# Enable testing
+enable_testing()
+include(CTest)
+
 # Set output directory to bin/Debug or bin/Release depending on build type
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release)
@@ -30,6 +34,9 @@ else()
     find_package(SDL2_mixer ${TESTED_SDL2_MIXER_VERSION} CONFIG REQUIRED)
     find_package(SDL2_ttf ${TESTED_SDL2_TTF_VERSION} CONFIG REQUIRED)
 endif()
+
+# Find Google Test for unit testing
+find_package(GTest CONFIG REQUIRED)
 
 set(SOURCES
     src/meowstro.cpp
@@ -119,3 +126,98 @@ if(CMAKE_EXPORT_COMPILE_COMMANDS)
         VERBATIM
     )
 endif()
+
+# ==== TESTING CONFIGURATION ====
+
+# Create a library target for the game logic (without main.cpp)
+# This allows tests to link against game code without the main function
+set(GAME_LIB_SOURCES
+    src/RenderWindow.cpp
+    src/Entity.cpp
+    src/Audio.cpp
+    src/AudioLogic.cpp
+    src/Font.cpp
+    src/Sprite.cpp
+    src/GameStats.cpp
+    src/ResourceManager.cpp
+    src/GameConfig.cpp
+    src/InputHandler.cpp
+    src/GameStateManager.cpp
+    src/RhythmGame.cpp
+    src/MenuSystem.cpp
+    src/AnimationSystem.cpp
+    src/Logger.cpp
+)
+
+set(GAME_LIB_HEADERS
+    include/RenderWindow.hpp
+    include/Entity.hpp
+    include/Audio.hpp
+    include/AudioLogic.hpp
+    include/Font.hpp
+    include/Sprite.hpp
+    include/GameStats.hpp
+    include/ResourceManager.hpp
+    include/GameConfig.hpp
+    include/InputHandler.hpp
+    include/GameStateManager.hpp
+    include/RhythmGame.hpp
+    include/MenuSystem.hpp
+    include/AnimationSystem.hpp
+    include/Logger.hpp
+    include/Exceptions.hpp
+)
+
+add_library(meowstro_lib STATIC ${GAME_LIB_SOURCES} ${GAME_LIB_HEADERS})
+
+# Link libraries to the game library
+if(TARGET SDL2::SDL2)
+    # vcpkg targets
+    target_link_libraries(meowstro_lib
+        PUBLIC
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
+        SDL2_mixer::SDL2_mixer
+        SDL2_ttf::SDL2_ttf
+    )
+else()
+    # System packages
+    target_link_libraries(meowstro_lib
+        PUBLIC
+        ${SDL2_LIBRARIES}
+        ${SDL2_IMAGE_LIBRARIES}
+        ${SDL2_MIXER_LIBRARIES}
+        ${SDL2_TTF_LIBRARIES}
+    )
+    target_include_directories(meowstro_lib
+        PUBLIC
+        ${SDL2_INCLUDE_DIRS}
+        ${SDL2_IMAGE_INCLUDE_DIRS}
+        ${SDL2_MIXER_INCLUDE_DIRS}
+        ${SDL2_TTF_INCLUDE_DIRS}
+    )
+endif()
+
+target_include_directories(meowstro_lib PUBLIC include)
+
+# Update main executable to use the library
+target_link_libraries(meowstro PRIVATE meowstro_lib)
+
+# Test executable
+add_executable(meowstro_tests
+    tests/main.cpp
+    tests/unit/test_GameStats.cpp
+)
+
+target_link_libraries(meowstro_tests 
+    PRIVATE 
+    meowstro_lib
+    GTest::gtest
+    GTest::gtest_main
+)
+
+target_include_directories(meowstro_tests PRIVATE include)
+
+# Register tests with CTest
+add_test(NAME unit_tests COMMAND meowstro_tests)

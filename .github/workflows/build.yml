@@ -42,9 +42,11 @@ jobs:
         shell: pwsh
         run: ./build.ps1
 
-      - name: Run Executable
+      - name: Run Game Executable Test
         working-directory: build/bin/Debug
-        run: ./meowstro.exe --test
+        run: |
+          # Keep --test flag for now to avoid audio issues in CI
+          ./meowstro.exe --test
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -68,10 +70,10 @@ jobs:
             Write-Host "No compilation database found, skipping clang-tidy"
           }
 
-      - name: Run ctest (unit tests)
+      - name: Run Unit Tests
         run: |
           cd build
-          ctest --output-on-failure || echo "No tests configured"
+          ctest --output-on-failure -C Debug
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -110,17 +112,17 @@ jobs:
       - name: Build Project
         run: cmake --build build --parallel $(nproc)
 
-      - name: Run Executable Test
-        working-directory: build/bin
+      - name: Run Game Executable Test
         run: |
-          # The executable should be in build/bin not build/bin/Debug for Linux
-          if [ -f "./meowstro" ]; then
-            ./meowstro --test
-          elif [ -f "./Debug/meowstro" ]; then
-            ./Debug/meowstro --test
+          # Keep --test flag for now to avoid audio issues in CI
+          # Find the executable location (Linux builds to build/bin, not build/bin/Debug)
+          if [ -f "build/bin/Debug/meowstro" ]; then
+            build/bin/Debug/meowstro --test
+          elif [ -f "build/bin/meowstro" ]; then
+            build/bin/meowstro --test
           else
-            echo "Executable not found, checking build directory..."
-            find .. -name "meowstro" -type f
+            echo "Main executable not found, checking build directory..."
+            find build -name "meowstro" -type f
             exit 1
           fi
 
@@ -138,10 +140,10 @@ jobs:
             echo "No compilation database found, skipping clang-tidy"
           fi
 
-      - name: Run ctest (unit tests)
+      - name: Run Unit Tests
         run: |
           cd build
-          ctest --output-on-failure || echo "No tests configured"
+          ctest --output-on-failure
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -179,9 +181,19 @@ jobs:
       - name: Build Project
         run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
 
-      - name: Run Executable
-        working-directory: build/bin
-        run: ./meowstro --test
+      - name: Run Game Executable Test  
+        run: |
+          # Keep --test flag for now to avoid audio issues in CI
+          # Find the executable location for macOS
+          if [ -f "build/bin/Debug/meowstro" ]; then
+            build/bin/Debug/meowstro --test
+          elif [ -f "build/bin/meowstro" ]; then
+            build/bin/meowstro --test
+          else
+            echo "Main executable not found, checking build directory..."
+            find build -name "meowstro" -type f
+            exit 1
+          fi
 
       - name: Run cppcheck (static analysis)
         run: |
@@ -197,10 +209,10 @@ jobs:
             echo "No compilation database found, skipping clang-tidy"
           fi
 
-      - name: Run ctest (unit tests)
+      - name: Run Unit Tests
         run: |
           cd build
-          ctest --output-on-failure || echo "No tests configured"
+          ctest --output-on-failure
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
