@@ -4,6 +4,7 @@
 #include <SDL_image.h>
 #include <unordered_map>
 #include <string>
+#include <memory>
 #include "Font.hpp"
 
 class ResourceManager {
@@ -27,7 +28,7 @@ public:
 private:
     SDL_Renderer* renderer;
     std::unordered_map<std::string, SDL_Texture*> textures;
-    std::unordered_map<std::string, Font*> fonts;
+    std::unordered_map<std::string, std::unique_ptr<Font>> fonts;
     bool m_valid;
     
     // Helper to generate unique keys

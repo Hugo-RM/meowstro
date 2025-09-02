@@ -94,19 +94,19 @@ Font* ResourceManager::getFont(const std::string& fontPath, int fontSize) {
     // Check if font already loaded
     auto it = fonts.find(fontKey);
     if (it != fonts.end()) {
-        return it->second;
+        return it->second.get();
     }
     
     // Load new font
-    Font* font = new Font();
+    auto font = std::make_unique<Font>();
     if (!font->load(fontPath, fontSize)) {
-        delete font;
         return nullptr;
     }
     
-    // Cache the font
-    fonts[fontKey] = font;
-    return font;
+    // Cache the font and return raw pointer for API compatibility
+    Font* fontPtr = font.get();
+    fonts[fontKey] = std::move(font);
+    return fontPtr;
 }
 
 void ResourceManager::cleanup() {
@@ -118,12 +118,7 @@ void ResourceManager::cleanup() {
     }
     textures.clear();
     
-    // Clean up all fonts
-    for (auto& pair : fonts) {
-        if (pair.second) {
-            delete pair.second;
-        }
-    }
+    // Clean up all fonts - unique_ptr handles deletion automatically
     fonts.clear();
 }
 

@@ -2,6 +2,7 @@
 #include "RenderWindow.hpp"
 #include "ResourceManager.hpp"
 #include "GameConfig.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 
@@ -36,17 +37,17 @@ void GameStateManager::updateState()
     // Execute current state
     switch (currentState) {
         case GameState::MainMenu:
-            std::cout << "Entering Main Menu" << std::endl;
+            Logger::info("Entering Main Menu");
             runMainMenu();
             break;
             
         case GameState::Playing:
-            std::cout << "Entering Gameplay" << std::endl;
+            Logger::info("Entering Gameplay");
             runGameplay();
             break;
             
         case GameState::EndScreen:
-            std::cout << "Entering End Screen" << std::endl;
+            Logger::info("Entering End Screen");
             runEndScreen();
             break;
             
@@ -113,7 +114,7 @@ void GameStateManager::runGameplay()
     // Clean up rhythm game resources (stop music, etc.)
     rhythmGame.cleanup();
     
-    std::cout << gameStats;
+    // Logger::logObject(LogLevel::INFO, gameStats); I need to update the formatting of cout gamestats
     
     transitionTo(GameState::EndScreen);
 }

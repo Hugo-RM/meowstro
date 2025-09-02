@@ -25,6 +25,14 @@ public:
     static void info(const std::string& message) { log(LogLevel::INFO, message); }
     static void debug(const std::string& message) { log(LogLevel::DEBUG, message); }
     
+    // Template method for objects with operator<< overloaded
+    template<typename T>
+    static void logObject(LogLevel level, const T& obj) {
+        std::ostringstream oss;
+        oss << obj;
+        log(level, oss.str());
+    }
+    
 private:
     static std::string levelToString(LogLevel level);
     static std::ostream& getOutputStream(LogLevel level);
