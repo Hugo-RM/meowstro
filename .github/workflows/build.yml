@@ -32,23 +32,7 @@ jobs:
             vcpkg-windows-${{ hashFiles('vcpkg.json') }}-
             vcpkg-windows-
 
-      - name: Prepare build.ps1 from build.default.ps1
-        shell: pwsh
-        run: |
-          Copy-Item build.default.ps1 build.ps1
-          (Get-Content build.ps1) -replace '^\$VCPKG_PATH\s*=.*', '$VCPKG_PATH = "${{ env.VCPKG_ROOT }}"' | Set-Content build.ps1
-
-      - name: Build Project (PowerShell)
-        shell: pwsh
-        run: ./build.ps1
-
-      - name: Run Game Executable Test
-        working-directory: build/bin/Debug
-        run: |
-          # Keep --test flag for now to avoid audio issues in CI
-          ./meowstro.exe --test
-
-      - name: Run cppcheck (static analysis)
+      - name: Run cppcheck (static analysis - fail fast)
         run: |
           if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
             choco install cppcheck -y
@@ -59,7 +43,28 @@ jobs:
             -I "${{ env.VCPKG_ROOT }}/installed/x64-windows/include" `
             src
 
-      - name: Run clang-tidy (static analysis)
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-windows-${{ hashFiles('**/CMakeLists.txt', 'vcpkg.json') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-windows-${{ hashFiles('**/CMakeLists.txt', 'vcpkg.json') }}-
+            cmake-windows-
+
+      - name: Prepare build.ps1 from build.default.ps1
+        shell: pwsh
+        run: |
+          Copy-Item build.default.ps1 build.ps1
+          (Get-Content build.ps1) -replace '^\$VCPKG_PATH\s*=.*', '$VCPKG_PATH = "${{ env.VCPKG_ROOT }}"' | Set-Content build.ps1
+
+      - name: Configure CMake for clang-tidy
+        shell: pwsh
+        run: |
+          # Configure CMake to generate compile_commands.json for clang-tidy
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Run clang-tidy (static analysis after CMake configure)
         run: |
           if (!(Get-Command clang-tidy -ErrorAction SilentlyContinue)) {
             choco install llvm -y
@@ -70,10 +75,11 @@ jobs:
             Write-Host "No compilation database found, skipping clang-tidy"
           }
 
-      - name: Run Unit Tests
+      - name: Build and Test via Script
+        shell: pwsh
         run: |
-          cd build
-          ctest --output-on-failure -C Debug
+          # Run the test script which handles build, test execution, and CTest
+          ./test.ps1
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -88,6 +94,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            apt-${{ runner.os }}-
+
       - name: Install SDL2 system packages and build tools
         run: |
           sudo apt-get update
@@ -99,8 +113,25 @@ jobs:
             libsdl2-image-dev \
             libsdl2-mixer-dev \
             libsdl2-ttf-dev \
+            libgtest-dev \
+            googletest \
             cppcheck \
             clang-tidy
+
+      - name: Run cppcheck (static analysis - fail fast)
+        run: |
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
+            -I include \
+            src
+
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-linux-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-linux-${{ hashFiles('**/CMakeLists.txt') }}-
+            cmake-linux-
 
       - name: Configure CMake (using system packages, NOT vcpkg)
         run: |
@@ -109,30 +140,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 
-      - name: Build Project
-        run: cmake --build build --parallel $(nproc)
-
-      - name: Run Game Executable Test
-        run: |
-          # Keep --test flag for now to avoid audio issues in CI
-          # Find the executable location (Linux builds to build/bin, not build/bin/Debug)
-          if [ -f "build/bin/Debug/meowstro" ]; then
-            build/bin/Debug/meowstro --test
-          elif [ -f "build/bin/meowstro" ]; then
-            build/bin/meowstro --test
-          else
-            echo "Main executable not found, checking build directory..."
-            find build -name "meowstro" -type f
-            exit 1
-          fi
-
-      - name: Run cppcheck (static analysis)
-        run: |
-          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
-            -I include \
-            src
-
-      - name: Run clang-tidy (static analysis)
+      - name: Run clang-tidy (static analysis after CMake configure)
         run: |
           if [ -f "build/compile_commands.json" ]; then
             find src -name '*.cpp' -exec clang-tidy -p build {} \;
@@ -140,26 +148,34 @@ jobs:
             echo "No compilation database found, skipping clang-tidy"
           fi
 
-      - name: Run Unit Tests
+      - name: Build and Test via Script
         run: |
-          cd build
-          ctest --output-on-failure
+          # Make script executable and run it
+          chmod +x ./test.sh
+          ./test.sh
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: meowstro-linux
-          path: |
-            build/bin/
-            !build/bin/**/*.o
-            !build/bin/**/*.a
+          path: build/bin/Debug/
 
   build-macos:
     runs-on: macos-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Cache Homebrew packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/var/homebrew/locks
+          key: brew-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            brew-${{ runner.os }}-
 
       - name: Install SDL2 via Homebrew
         run: |
@@ -168,40 +184,34 @@ jobs:
             sdl2_image \
             sdl2_mixer \
             sdl2_ttf \
+            googletest \
             cppcheck \
             llvm
+
+      - name: Run cppcheck (static analysis - fail fast)
+        run: |
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
+            -I include \
+            src
+
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-macos-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-macos-${{ hashFiles('**/CMakeLists.txt') }}-
+            cmake-macos-
 
       - name: Configure CMake (Homebrew packages)
         run: |
           HOMEBREW_PREFIX=$(brew --prefix)
           cmake -B build -S . \
             -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_PREFIX_PATH="$HOMEBREW_PREFIX"
 
-      - name: Build Project
-        run: cmake --build build --parallel $(sysctl -n hw.logicalcpu)
-
-      - name: Run Game Executable Test  
-        run: |
-          # Keep --test flag for now to avoid audio issues in CI
-          # Find the executable location for macOS
-          if [ -f "build/bin/Debug/meowstro" ]; then
-            build/bin/Debug/meowstro --test
-          elif [ -f "build/bin/meowstro" ]; then
-            build/bin/meowstro --test
-          else
-            echo "Main executable not found, checking build directory..."
-            find build -name "meowstro" -type f
-            exit 1
-          fi
-
-      - name: Run cppcheck (static analysis)
-        run: |
-          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
-            -I include \
-            src
-
-      - name: Run clang-tidy (static analysis)
+      - name: Run clang-tidy (static analysis after CMake configure)
         run: |
           if [ -f "build/compile_commands.json" ]; then
             $(brew --prefix llvm)/bin/clang-tidy -p build $(find src -name '*.cpp')
@@ -209,10 +219,11 @@ jobs:
             echo "No compilation database found, skipping clang-tidy"
           fi
 
-      - name: Run Unit Tests
+      - name: Build and Test via Script
         run: |
-          cd build
-          ctest --output-on-failure
+          # Make script executable and run it
+          chmod +x ./test.sh
+          ./test.sh
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'

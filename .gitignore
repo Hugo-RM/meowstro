@@ -8,9 +8,6 @@ build/
 build.ps1
 build.bat
 build.sh
-test.ps1
-test.bat
-test.sh
 CMakePresets.json
 config.json
 

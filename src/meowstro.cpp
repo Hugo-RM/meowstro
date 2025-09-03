@@ -29,10 +29,6 @@
 
 int main(int argc, char** argv)
 {
-	// Add tests later, Audio fails to find endpoint in Git Actions
-	if (argc > 1 && std::string(argv[1]) == "--test") 
-		return EXIT_SUCCESS;
-		
 	try {
 		// Initialize SDL subsystems - fail fast on critical errors
 		if (SDL_Init(SDL_INIT_VIDEO) != EXIT_SUCCESS) {
