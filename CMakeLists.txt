@@ -209,6 +209,11 @@ add_executable(meowstro_tests
     tests/main.cpp
     tests/unit/test_GameStats.cpp
     tests/unit/test_Logger.cpp
+    tests/unit/test_GameConfig.cpp
+    tests/unit/test_Entity.cpp
+    tests/unit/test_Sprite.cpp
+    tests/unit/test_ResourceManager.cpp
+    tests/unit/test_InputHandler.cpp
 )
 
 target_link_libraries(meowstro_tests 
