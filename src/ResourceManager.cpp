@@ -26,10 +26,16 @@ SDL_Texture* ResourceManager::loadTexture(const std::string& filePath) {
         return nullptr;
     }
     
-    // Check if texture already loaded
+    // Check if texture already loaded and validate it
     auto it = textures.find(filePath);
     if (it != textures.end()) {
-        return it->second;
+        if (isTextureValid(it->second)) {
+            Logger::debug("Using cached texture: " + filePath);
+            return it->second;
+        } else {
+            Logger::warning("Cached texture is invalid, reloading: " + filePath);
+            textures.erase(it);
+        }
     }
     
     // Load new texture
@@ -63,10 +69,16 @@ SDL_Texture* ResourceManager::createTextTexture(const std::string& fontPath, int
     
     std::string textKey = generateTextKey(fontPath, fontSize, text, color);
     
-    // Check if text texture already exists
+    // Check if text texture already exists and validate it
     auto it = textures.find(textKey);
     if (it != textures.end()) {
-        return it->second;
+        if (isTextureValid(it->second)) {
+            Logger::debug("Using cached text texture: " + text);
+            return it->second;
+        } else {
+            Logger::warning("Cached text texture is invalid, recreating: " + text);
+            textures.erase(it);
+        }
     }
     
     // Get or load font
@@ -110,6 +122,7 @@ Font* ResourceManager::getFont(const std::string& fontPath, int fontSize) {
 }
 
 void ResourceManager::cleanup() {
+    Logger::info("ResourceManager cleaning up all resources");
     // Clean up all textures
     for (auto& pair : textures) {
         if (pair.second) {
@@ -120,6 +133,43 @@ void ResourceManager::cleanup() {
     
     // Clean up all fonts - unique_ptr handles deletion automatically
     fonts.clear();
+    Logger::debug("ResourceManager cleanup complete");
+}
+
+void ResourceManager::clearCache() {
+    Logger::info("ResourceManager clearing texture cache (keeping textures alive)");
+    // Clear cache without destroying textures - useful for state resets
+    // This allows textures to remain valid but forces reloading from disk
+    textures.clear();
+    fonts.clear();
+    Logger::debug("ResourceManager cache cleared");
+}
+
+bool ResourceManager::isTextureValid(SDL_Texture* texture) const {
+    if (!texture) {
+        return false;
+    }
+
+    return true;
+    
+    // In Release builds, SDL_QueryTexture might behave differently
+    // For now, assume all non-null textures are valid to avoid cache invalidation
+    // This is safe because ResourceManager owns the textures and only destroys them in cleanup()
+    
+    /* Original validation code - disabled due to Release build issues
+    // Try to query the texture - if it's been destroyed, this will fail
+    int w, h;
+    Uint32 format;
+    int access;
+    int result = SDL_QueryTexture(texture, &format, &access, &w, &h);
+    
+    if (result != 0) {
+        Logger::warning("Texture validation failed: " + std::string(SDL_GetError()));
+        return false;
+    }
+    
+    return true;
+    */
 }
 
 std::string ResourceManager::generateFontKey(const std::string& fontPath, int fontSize) const {

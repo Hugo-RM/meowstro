@@ -29,27 +29,9 @@ test.bat
 4. **Display colored status** (✅ pass / ❌ fail)
 5. **Exit with proper codes** for CI integration
 
-## Manual Commands
-
-If you prefer to run commands manually:
-
-```bash
-# Build everything
-cmake --build build --config Debug
-
-# Run tests directly (detailed output)
-./build/bin/Debug/meowstro_tests.exe
-
-# Run tests with CTest (CI-style)
-cd build && ctest --output-on-failure -C Debug
-
-# Run specific test patterns
-./build/bin/Debug/meowstro_tests.exe --gtest_filter="GameStatsTest.*"
-```
-
 ## Adding New Tests
 
-1. Create new test files in `tests/unit/`, `tests/component/`, etc.
+1. Create new test files in appropriate directory.
 2. Add the test file to `CMakeLists.txt` in the `meowstro_tests` target
 3. Rebuild and run tests
 
