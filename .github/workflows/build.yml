@@ -1,87 +1,233 @@
-name: Windows Build and Test
+name: Multi-Platform Build and Test
 
 on:
   push:
     branches:
-      - main
+      - '**'
   pull_request:
 
 jobs:
-  build:
+  build-windows:
     runs-on: windows-latest
-
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set Up Python
-        uses: actions/setup-python@v4
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
         with:
-          python-version: "3.x"
+          vcpkgGitCommitId: '5300a2a461a53b76405db4fcbe6aeb0eea43935d'
 
-      - name: Install SDL2
+      - name: Cache vcpkg packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/vcpkg_installed
+            ${{ env.VCPKG_ROOT }}/installed
+            ${{ env.VCPKG_ROOT }}/packages
+            ${{ env.VCPKG_ROOT }}/buildtrees
+            ${{ env.VCPKG_ROOT }}/downloads
+          key: vcpkg-windows-${{ hashFiles('vcpkg.json') }}-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            vcpkg-windows-${{ hashFiles('vcpkg.json') }}-
+            vcpkg-windows-
+
+      - name: Run cppcheck (static analysis - fail fast)
         run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL/releases/download/release-2.32.2/SDL2-devel-2.32.2-VC.zip -OutFile SDL2.zip
-          Expand-Archive -Path SDL2.zip -DestinationPath C:\SDL2_tmp
-          Move-Item -Path C:\SDL2_tmp\SDL2-2.32.2\* -Destination C:\SDL2 -Force
-          if (Test-Path "C:\SDL2\include\SDL.h") { echo "✅ Extraction Successful: SDL.h found" } else { echo "❌ Extraction Failed: SDL.h missing"; exit 1 }
+          if (!(Get-Command cppcheck -ErrorAction SilentlyContinue)) {
+            choco install cppcheck -y
+          }
+          $cppcheck = if (Get-Command cppcheck -ErrorAction SilentlyContinue) { "cppcheck" } else { "C:\Program Files\Cppcheck\cppcheck.exe" }
+          & $cppcheck --enable=all --inconclusive --std=c++17 --quiet `
+            -I include `
+            -I "${{ env.VCPKG_ROOT }}/installed/x64-windows/include" `
+            src
 
-      - name: Install SDL2_image
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-windows-${{ hashFiles('**/CMakeLists.txt', 'vcpkg.json') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-windows-${{ hashFiles('**/CMakeLists.txt', 'vcpkg.json') }}-
+            cmake-windows-
+
+      - name: Prepare build.ps1 from build.default.ps1
+        shell: pwsh
         run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.8/SDL2_image-devel-2.8.8-VC.zip -OutFile SDL2_image.zip
-          Expand-Archive -Path SDL2_image.zip -DestinationPath C:\SDL2_image_tmp
-          Move-Item -Path C:\SDL2_image_tmp\SDL2_image-2.8.8\* -Destination C:\SDL2_image -Force
-          if (Test-Path "C:\SDL2_image\include\SDL_image.h") { echo "✅ Extraction Successful: SDL_image.h found" } else { echo "❌ Extraction Failed: SDL_image.h missing"; exit 1 }
+          Copy-Item build.default.ps1 build.ps1
+          (Get-Content build.ps1) -replace '^\$VCPKG_PATH\s*=.*', '$VCPKG_PATH = "${{ env.VCPKG_ROOT }}"' | Set-Content build.ps1
 
-      - name: Install SDL2_mixer
+      - name: Configure CMake for clang-tidy
+        shell: pwsh
         run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.8.1/SDL2_mixer-devel-2.8.1-VC.zip -OutFile SDL2_mixer.zip
-          Expand-Archive -Path SDL2_mixer.zip -DestinationPath C:\SDL2_mixer_tmp
-          Move-Item -Path C:\SDL2_mixer_tmp\SDL2_mixer-2.8.1\* -Destination C:\SDL2_mixer -Force
-          if (Test-Path "C:\SDL2_mixer\include\SDL_mixer.h") { echo "✅ Extraction Successful: SDL_mixer.h found" } else { echo "❌ Extraction Failed: SDL_mixer.h missing"; exit 1 }
+          # Configure CMake to generate compile_commands.json for clang-tidy
+          cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=Debug
 
-      - name: Install SDL2_ttf
+      - name: Run clang-tidy (static analysis after CMake configure)
         run: |
-          Invoke-WebRequest -Uri https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.24.0/SDL2_ttf-devel-2.24.0-VC.zip -OutFile SDL2_ttf.zip
-          Expand-Archive -Path SDL2_ttf.zip -DestinationPath C:\SDL2_ttf_tmp
-          Move-Item -Path C:\SDL2_ttf_tmp\SDL2_ttf-2.24.0\* -Destination C:\SDL2_ttf -Force
-          if (Test-Path "C:\SDL2_ttf\include\SDL_ttf.h") { echo "✅ Extraction Successful: SDL_ttf.h found" } else { echo "❌ Extraction Failed: SDL_ttf.h missing"; exit 1 }
+          if (!(Get-Command clang-tidy -ErrorAction SilentlyContinue)) {
+            choco install llvm -y
+          }
+          if (Test-Path "build/compile_commands.json") {
+            clang-tidy -p build $(Get-ChildItem -Path src -Filter *.cpp | ForEach-Object { $_.FullName })
+          } else {
+            Write-Host "No compilation database found, skipping clang-tidy"
+          }
 
-      - name: Create config.json from Default
+      - name: Build and Test via Script
+        shell: pwsh
         run: |
-          copy config.default.json config.json
-          python -c "import json; f=open('config.json', 'r+'); d=json.load(f); \
-          d.update({'SDL2_DIR': 'C:/SDL2', 'SDL2_IMAGE_DIR': 'C:/SDL2_image', 'SDL2_MIXER_DIR': 'C:/SDL2_mixer', 'SDL2_TTF_DIR': 'C:/SDL2_ttf'}); \
-          f.seek(0); json.dump(d, f, indent=4); f.truncate(); f.close()"
+          # Run the test script which handles build, test execution, and CTest
+          ./test.ps1
 
-      # - name: Debug Config JSON
-      #   run: type config.json
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-windows
+          path: build/bin/Debug/
 
-      - name: Generate CMakePresets.json
-        run: python generate_cmake_presets.py
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      # - name: Debug CMakePresets.json
-      #   run: type CMakePresets.json
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: /var/cache/apt/archives
+          key: apt-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            apt-${{ runner.os }}-
 
-      - name: Configure CMake
-        run: cmake --preset my-build
-
-      # - name: Debug CMake Cache Variables 
-      #   run: cmake --preset my-build --debug-output
-
-      - name: Build Project
+      - name: Install SDL2 system packages and build tools
         run: |
-          cd "./build"
-          cmake --build .
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libsdl2-dev \
+            libsdl2-image-dev \
+            libsdl2-mixer-dev \
+            libsdl2-ttf-dev \
+            libgtest-dev \
+            googletest \
+            cppcheck \
+            clang-tidy
 
-      - name: Copy DLLs to Executable Directory
+      - name: Run cppcheck (static analysis - fail fast)
         run: |
-          copy C:\SDL2\lib\x64\SDL2.dll build/bin/Debug/
-          copy C:\SDL2_image\lib\x64\SDL2_image.dll build/bin/Debug/
-          copy C:\SDL2_mixer\lib\x64\SDL2_mixer.dll build/bin/Debug/
-          copy C:\SDL2_ttf\lib\x64\SDL2_ttf.dll build/bin/Debug/
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
+            -I include \
+            src
 
-      - name: Run Executable (Optional)
-        working-directory: build/bin/Debug
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-linux-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-linux-${{ hashFiles('**/CMakeLists.txt') }}-
+            cmake-linux-
+
+      - name: Configure CMake (using system packages, NOT vcpkg)
         run: |
-          ./meowstro.exe
+          # Explicitly avoid vcpkg by not setting CMAKE_TOOLCHAIN_FILE
+          cmake -B build -S . \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+      - name: Run clang-tidy (static analysis after CMake configure)
+        run: |
+          if [ -f "build/compile_commands.json" ]; then
+            find src -name '*.cpp' -exec clang-tidy -p build {} \;
+          else
+            echo "No compilation database found, skipping clang-tidy"
+          fi
+
+      - name: Build and Test via Script
+        run: |
+          # Make script executable and run it
+          chmod +x ./test.sh
+          ./test.sh
+
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-linux
+          path: build/bin/Debug/
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Cache Homebrew packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew
+            /opt/homebrew/var/homebrew/locks
+          key: brew-${{ runner.os }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            brew-${{ runner.os }}-
+
+      - name: Install SDL2 via Homebrew
+        run: |
+          brew install \
+            sdl2 \
+            sdl2_image \
+            sdl2_mixer \
+            sdl2_ttf \
+            googletest \
+            cppcheck \
+            llvm
+
+      - name: Run cppcheck (static analysis - fail fast)
+        run: |
+          cppcheck --enable=all --inconclusive --std=c++17 --quiet \
+            -I include \
+            src
+
+      - name: Cache CMake build directory
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: cmake-macos-${{ hashFiles('**/CMakeLists.txt') }}-${{ hashFiles('src/**', 'include/**') }}
+          restore-keys: |
+            cmake-macos-${{ hashFiles('**/CMakeLists.txt') }}-
+            cmake-macos-
+
+      - name: Configure CMake (Homebrew packages)
+        run: |
+          HOMEBREW_PREFIX=$(brew --prefix)
+          cmake -B build -S . \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_PREFIX_PATH="$HOMEBREW_PREFIX"
+
+      - name: Run clang-tidy (static analysis after CMake configure)
+        run: |
+          if [ -f "build/compile_commands.json" ]; then
+            $(brew --prefix llvm)/bin/clang-tidy -p build $(find src -name '*.cpp')
+          else
+            echo "No compilation database found, skipping clang-tidy"
+          fi
+
+      - name: Build and Test via Script
+        run: |
+          # Make script executable and run it
+          chmod +x ./test.sh
+          ./test.sh
+
+      - name: Upload Executable Artifact (main branch only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: meowstro-macos
+          path: build/bin/Debug/

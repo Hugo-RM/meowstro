@@ -1,122 +1,118 @@
 # Meowstro - SDL2 Game Project
 
 ## Overview
-This is a game project using SDL2 and its related libraries. The project is configured using CMake and follows a structured build process to make it easy for developers to set up and contribute.
+Meowstro is a C++ game project using SDL2 and related libraries. The project uses CMake for building with platform-specific dependency management to optimize setup and development across different systems.
 
 ## Prerequisites
-Before setting up the project, ensure you have the following installed:
-- **Visual Studio 2022** (or any C++ compiler supporting C++17)
-- **[CMake](https://cmake.org/download/)** (minimum version 3.10 | I recommend not getting the Release Candidate)
-- **(Optional) [Python](https://www.python.org/downloads/)** (Reduces amount of copy pasting SDL paths)
 
-## Setup Instructions
+- **C++17 compiler** (Visual Studio 2022, GCC, Clang)
+- **[CMake](https://cmake.org/download/)** (version 3.10 or higher)
+- **Platform-specific dependencies** (see below and in DEPENDENCIES.md)
 
-### 1. Install Dependencies
-Download and extract the following libraries:
-- **[SDL2](https://github.com/libsdl-org/SDL/releases/download/release-2.32.2/SDL2-devel-2.32.2-VC.zip)**
-- **[SDL2_image](https://github.com/libsdl-org/SDL_image/releases/download/release-2.8.8/SDL2_image-devel-2.8.8-VC.zip)**
-- **[SDL2_mixer](https://github.com/libsdl-org/SDL_mixer/releases/download/release-2.8.1/SDL2_mixer-devel-2.8.1-VC.zip)**
-- **[SDL2_ttf](https://github.com/libsdl-org/SDL_ttf/releases/download/release-2.24.0/SDL2_ttf-devel-2.24.0-VC.zip)**
+## Platform-Specific Setup
 
-Make sure to note their extracted paths as you will need them for configuration.
+All of my group uses Windows so that's the recommended OS but I will try to make Linux and MacOS work. I made it so those OS get tested in the GitHub Actions too so hopefully everything works with that.
 
-### 2. Configure the Project
-Before running CMake, you must configure the project by setting the correct paths in the configuration files:
+### Windows Setup
 
-#### Editing Configuration Files
-Create a copy of the default configuration file `config.default.json` and update it with your correct paths:
-- `config.default.json` → `config.json`
+Install [vcpkg](https://github.com/microsoft/vcpkg) and integrate it:
 
-Edit `config.json` and update the paths for SDL2 and its related libraries:
-```json
-{
-    "SDL2_DIR": "path-to-directory/SDL2-2.32.2",
-    "SDL2_IMAGE_DIR": "path-to-directory/SDL2_image-2.8.8",
-    "SDL2_MIXER_DIR": "path-to-directory/SDL2_mixer-2.8.1",
-    "SDL2_TTF_DIR": "path-to-directory/SDL2_ttf-2.24.0"
-}
+```powershell
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+.\vcpkg integrate install
 ```
 
-The `CMakePresets.json` will be updated with your path after running the Python Script.
+Copy `build.default.bat` to `build.bat` (Command Prompt) or `build.default.ps1` to `build.ps1` (PowerShell), update the vcpkg path, then:
 
-The Python File `generate_cmake_presets.py` can be run with the following command:
-
-```sh
-python generate_cmake_presets.py
+```cmd
+.\build.bat
+```
+or
+```ps1
+.\build.ps1
 ```
 
-### 3. Creating Files (Skip if You're Not Creating a New File)
+Both scripts will:
+- Configure the project using the Visual Studio generator (`-G "Visual Studio 17 2022" -A x64`)
+- Use the vcpkg toolchain file
+- Build the Debug configuration
 
-> ⚠️ **IMPORTANT: YOU MUST DO THIS EVERY TIME YOU CREATE A NEW `.cpp` OR `.hpp` FILE.**  
-> If you don’t do this, the file will not be included in the project build. You must also rebuild the project after adding new files.
+> The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
 
-Depending on how you created your new file, you may need to manually move it to the correct directory. Visual Studio, for example, might place new files inside the `./build` directory.
+### Ubuntu Linux
 
-If you used **Add Class** or **New Item** in Visual Studio:
-- Move the generated `.cpp` files to the `src/` directory.
-- Move the generated `.hpp` files to the `include/` directory.
+Install SDL2 and development tools from the system package manager:
 
-Alternatively, you can just **create the files directly inside the `src/` and `include/` folders** before building.
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+    build-essential \
+    cmake \
+    pkg-config \
+    libsdl2-dev \
+    libsdl2-image-dev \
+    libsdl2-mixer-dev \
+    libsdl2-ttf-dev
+    
+# Note: Requires SDL2 2.30.0+, SDL2_image 2.8.2+, SDL2_mixer 2.8.0+, SDL2_ttf 2.22.0+
+```
 
-After the files are correctly placed, you must update the `CMakeLists.txt` file so that they are included in the build:
+Then build directly:
+```bash
+cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build
+```
+
+### macOS
+
+Homebrew:
+```bash
+brew install sdl2 sdl2_image sdl2_mixer sdl2_ttf
+cmake -B build -S . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --build build
+```
+
+## Build Scripts
+
+For convenience, platform-specific build scripts are provided:
+
+- **Windows**: `build.bat` or `build.ps1` (copy from `build.default.bat` and `build.default.ps1`)
+- **Linux/macOS**: `build.sh` (copy from `build.default.sh`)
+
+Personal build scripts contain system-specific paths and are ignored in `.gitignore`.
+
+## Running the Game
+
+After building, run the executable:
+
+- **Debug build (default):** `./build/bin/Debug/meowstro` (add `.exe` on Windows)
+- **Release build:** `./build/bin/Release/meowstro` (add `.exe` on Windows)
+
+> The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
+
+## Additional Tools Used in GitHub Actions
+
+- **cppcheck**
+- **clang-tidy**
+
+## Adding Files
+
+Update `CMakeLists.txt` when adding new source files:
 
 ```cmake
-# Define Source Files
 set(SOURCES
-    src/file_1.cpp
-    src/file_2.cpp
-    ...
-    src/file_X.cpp
+    src/existing_file.cpp
+    src/new_file.cpp  # Add here
+    # ...
 )
 
-# Define Header Files
 set(HEADERS
-    include/file_1.hpp
-    ...
-    include/file_X.hpp
+    include/existing_file.hpp
+    include/new_file.hpp  # Add here
+    # ...
 )
-```
-
-### 4. Build the Project
-
-First you will want to configure the CMake after configuring files 
-
-#### Creates the Make File
-```sh
-cmake --preset my-build
-```
-
-You have two common ways to build and run the project: **Visual Studio** or the **Command Line**.
-
----
-
-#### 🔷 Method 1: Using Visual Studio
-
-1. Open the `.sln` file located inside the `build/` directory.
-2. In the **Solution Explorer**, right-click on the project named `meowstro` and select **"Set as Startup Project"**.
-3. Press `Ctrl + F5` or click **Debug → Start Without Debugging** to run the project.
-
-✅ That’s it! Visual Studio will automatically build and run the project.
-
----
-
-#### ⚙️ Method 2: Using Command Line
-
-Make sure you're in the root of the project and then run the following:
-
-#### Change to the Build Directory
-```sh
-cd "./build"
-```
-
-#### Build the Project
-```sh
-cmake --build .
-```
-
-#### Run the Built Executable
-```sh
-./bin/Debug/meowstro.exe
 ```
 
 ## Directory Structure
@@ -126,12 +122,13 @@ cmake --build .
 │   │-- workflows/         # GitHub Actions workflows
 │   │   │-- build.yml      # Workflow for building the project
 │   │-- PULL_REQUEST_TEMPLATE.md # Pull request guidelines
-|-- aseperite-imgs # Aseperite files to modify image assets
+|-- aseperite-imgs         # Aseperite files to modify image assets
 │-- assets/                # Game assets (textures, sounds, etc.)
 │   │-- audio/             # Audio files
 │   │-- fonts/             # Font files
 │   │-- images/            # Image files
-│-- build/                 # CMake build files (includes build/bin/Debug)
+│-- build/                 # CMake build files (includes build/bin/Debug and build/bin/Release)
+|-- cmake/                 # copy_if_exists.cmake location
 │-- docs/                  # Project documentation
 │   │-- design_notes.md
 │   │-- how_to_play.md
@@ -139,17 +136,13 @@ cmake --build .
 │-- src/                   # Source files
 │-- .gitattributes         # Git attributes file
 │-- .gitignore             # Git ignore file
+│-- build.default.bat      # Windows batch default build script
+│-- build.default.ps1      # Windows PowerShell default build script
+│-- build.default.sh       # macOS/Linux default build script
 │-- CMakeLists.txt         # Main CMake build script
-│-- CMakePresets.default.json  # Default CMake preset
-│-- CMakePresets.json      # Active CMake preset configuration (created by py script)
-│-- config.default.json    # Default configuration file (rename to use)
-│-- config.json            # Active configuration file
-|-- generate_cmake_presets.py  # Generates the CMakePresets.json based on config.json
+|-- DEPENDENCIES.md        # List of dependencies/versions used
 │-- LICENSE                # Project LICENSE
 │-- README.md              # Project README
-```
+|-- vcpkg.json             # JSON file w/ dependencies & versions used in vcpkg install
 
-## Contribution Guidelines
-- **DON'T** commit `config.json` or `CMakePresets.json`. These files contain personal paths should be local.
-- If modifying build configuration, ensure compatibility with Windows.
-- Follow C++ best practices and maintain code clarity.
+```

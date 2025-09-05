@@ -1,35 +1,48 @@
 #include <iostream>
 #include "RenderWindow.hpp"
+#include "Logger.hpp"
 
 
-RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags) : window(NULL), renderer(NULL)
+RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags) 
+    : window(nullptr), renderer(nullptr), m_valid(false)
 {
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, windowFlags);
-	if (window == NULL)
+	if (window == nullptr)
 	{
-		std::cout << "Window failed to init. ERROR: " << SDL_GetError() << std::endl;
+		Logger::logSDLError(LogLevel::ERROR, "Failed to create window");
 		return;
 	}
+	
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+	if (renderer == nullptr)
+	{
+		Logger::logSDLError(LogLevel::ERROR, "Failed to create renderer");
+		SDL_DestroyWindow(window);
+		window = nullptr;
+		return;
+	}
+	
 	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
-}
-
-SDL_Texture *RenderWindow::loadTexture(const char *filePath)
-{
-	SDL_Texture *texture = NULL;
-	texture = IMG_LoadTexture(renderer, filePath);
-
-	if (texture == NULL)
-		std::cout << "IMG_LoadTexture failed. ERROR: " << SDL_GetError() << std::endl;
-
-	return texture;
+	m_valid = true;
 }
 void RenderWindow::clear()
 {
-	SDL_RenderClear(renderer);
+	if (m_valid && renderer) {
+		SDL_RenderClear(renderer);
+	}
 }
 void RenderWindow::render(Entity& entity)
 {
+	if (!m_valid || !renderer) {
+		Logger::error("RenderWindow::render called on invalid window");
+		return;
+	}
+	
+	if (entity.getTexture() == nullptr) {
+		Logger::warning("RenderWindow::render called with null texture");
+		return;
+	}
+	
 	SDL_Rect src = entity.getCurrentFrame();
 	SDL_Rect destination;
 
@@ -42,11 +55,19 @@ void RenderWindow::render(Entity& entity)
 }
 void RenderWindow::display()
 {
-	SDL_RenderPresent(renderer);
+	if (m_valid && renderer) {
+		SDL_RenderPresent(renderer);
+	}
 }
 
 RenderWindow::~RenderWindow()
 {
-	SDL_DestroyRenderer(renderer);
-	SDL_DestroyWindow(window);
+	if (renderer) {
+		SDL_DestroyRenderer(renderer);
+		renderer = nullptr;
+	}
+	if (window) {
+		SDL_DestroyWindow(window);
+		window = nullptr;
+	}
 }

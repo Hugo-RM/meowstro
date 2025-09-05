@@ -1,0 +1,3 @@
+if(EXISTS "${src}")
+    file(COPY "${src}" DESTINATION "${dst}" FILE_PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ WORLD_READ)
+endif()

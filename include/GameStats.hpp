@@ -2,7 +2,6 @@
 //Desc: .hpp file for displaying game statistics
 #pragma once
 #include <iostream>
-using namespace std;
 
 class GameStats
 {
@@ -24,7 +23,7 @@ public:
 	void increaseScore(int score);
 	void resetStats();
 	//others
-	friend ostream& operator << (ostream& out, const GameStats& s);
+	friend std::ostream& operator << (std::ostream& out, const GameStats& s);
 	GameStats operator++ (int); //adds to hits and score
 	GameStats operator-- (int); //adds to misses
 private: 

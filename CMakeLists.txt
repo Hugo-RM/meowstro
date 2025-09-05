@@ -1,53 +1,43 @@
 cmake_minimum_required(VERSION 3.10)
-project(Meowstro VERSION 1.0.0)
+project(Meowstro VERSION 2.0.0)
 
-# Set C++ Standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# Set output path
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+# Enable testing
+enable_testing()
+include(CTest)
 
-# Read JSON Configuration File (if it exists)
-if(EXISTS "${CMAKE_SOURCE_DIR}/config.json")
-    file(READ "${CMAKE_SOURCE_DIR}/config.json" CONFIG_JSON)
+# Set output directory to bin/Debug or bin/Release depending on build type
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/Release)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) # fallback
 
-    # Extract paths from JSON
-    string(JSON SDL2_DIR GET ${CONFIG_JSON} SDL2_DIR)
-    string(JSON SDL2_IMAGE_DIR GET ${CONFIG_JSON} SDL2_IMAGE_DIR)
-    string(JSON SDL2_MIXER_DIR GET ${CONFIG_JSON} SDL2_MIXER_DIR)
-    string(JSON SDL2_TTF_DIR GET ${CONFIG_JSON} SDL2_TTF_DIR)
+# Tested versions - other versions use at your own risk
+set(TESTED_SDL2_VERSION "2.30.0")
+set(TESTED_SDL2_IMAGE_VERSION "2.8.2")
+set(TESTED_SDL2_MIXER_VERSION "2.8.0")
+set(TESTED_SDL2_TTF_VERSION "2.22.0")
 
-    # Validate JSON Extraction
-    if (NOT SDL2_DIR OR NOT SDL2_IMAGE_DIR OR NOT SDL2_MIXER_DIR OR NOT SDL2_TTF_DIR)
-        message(FATAL_ERROR "Invalid config.json format! Ensure all paths are correctly set.")
-    endif()
-
-    # Set Library and Include Paths
-    set(SDL2_LIBRARY "${SDL2_DIR}/lib/x64/SDL2.lib")
-    set(SDL2MAIN_LIBRARY "${SDL2_DIR}/lib/x64/SDL2main.lib")
-    set(SDL2_INCLUDE_DIR "${SDL2_DIR}/include")
-
-    set(SDL2_IMAGE_LIBRARY "${SDL2_IMAGE_DIR}/lib/x64/SDL2_image.lib")
-    set(SDL2_IMAGE_INCLUDE_DIR "${SDL2_IMAGE_DIR}/include")
-
-    set(SDL2_MIXER_LIBRARY "${SDL2_MIXER_DIR}/lib/x64/SDL2_mixer.lib")
-    set(SDL2_MIXER_INCLUDE_DIR "${SDL2_MIXER_DIR}/include")
-
-    set(SDL2_TTF_LIBRARY "${SDL2_TTF_DIR}/lib/x64/SDL2_ttf.lib")
-    set(SDL2_TTF_INCLUDE_DIR "${SDL2_TTF_DIR}/include")
-
+# Try vcpkg first, then fall back to system packages
+find_package(SDL2 ${TESTED_SDL2_VERSION} CONFIG QUIET)
+if(NOT SDL2_FOUND)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(SDL2 REQUIRED sdl2>=${TESTED_SDL2_VERSION})
+    pkg_check_modules(SDL2_IMAGE REQUIRED SDL2_image>=${TESTED_SDL2_IMAGE_VERSION})
+    pkg_check_modules(SDL2_MIXER REQUIRED SDL2_mixer>=${TESTED_SDL2_MIXER_VERSION})
+    pkg_check_modules(SDL2_TTF REQUIRED SDL2_ttf>=${TESTED_SDL2_TTF_VERSION})
+    
+    message(STATUS "Using system SDL2 packages with minimum versions: SDL2 ${TESTED_SDL2_VERSION}, SDL2_image ${TESTED_SDL2_IMAGE_VERSION}, SDL2_mixer ${TESTED_SDL2_MIXER_VERSION}, SDL2_ttf ${TESTED_SDL2_TTF_VERSION}")
 else()
-    message(WARNING "config.json not found! Falling back to find_package().")
-
-    # Find SDL2 Automatically if JSON is missing
-    find_package(SDL2 REQUIRED)
-    find_package(SDL2_image REQUIRED)
-    find_package(SDL2_mixer REQUIRED)
-    find_package(SDL2_ttf REQUIRED)
+    find_package(SDL2_image ${TESTED_SDL2_IMAGE_VERSION} CONFIG REQUIRED)
+    find_package(SDL2_mixer ${TESTED_SDL2_MIXER_VERSION} CONFIG REQUIRED)
+    find_package(SDL2_ttf ${TESTED_SDL2_TTF_VERSION} CONFIG REQUIRED)
 endif()
 
-# Define Source Files
+# Find Google Test for unit testing
+find_package(GTest CONFIG REQUIRED)
+
 set(SOURCES
     src/meowstro.cpp
     src/RenderWindow.cpp
@@ -57,51 +47,185 @@ set(SOURCES
     src/Font.cpp
     src/Sprite.cpp
     src/GameStats.cpp
+    src/ResourceManager.cpp
+    src/GameConfig.cpp
+    src/InputHandler.cpp
+    src/GameStateManager.cpp
+    src/RhythmGame.cpp
+    src/MenuSystem.cpp
+    src/AnimationSystem.cpp
+    src/Logger.cpp
 )
 
-# Define Header Files
 set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
+    include/SDLTexture.hpp
     include/Audio.hpp
     include/AudioLogic.hpp
     include/Font.hpp
     include/Sprite.hpp
     include/GameStats.hpp
+    include/ResourceManager.hpp
+    include/GameConfig.hpp
+    include/InputHandler.hpp
+    include/GameStateManager.hpp
+    include/RhythmGame.hpp
+    include/MenuSystem.hpp
+    include/AnimationSystem.hpp
+    include/Logger.hpp
+    include/Exceptions.hpp
 )
 
-# Ensure at least one source file exists
-if (NOT SOURCES)
-    message(FATAL_ERROR "No source files found in src/ directory.")
+add_executable(meowstro ${SOURCES} ${HEADERS})
+
+# Link libraries based on which method was used
+if(TARGET SDL2::SDL2)
+    # vcpkg targets
+    target_link_libraries(meowstro
+        PRIVATE
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
+        SDL2_mixer::SDL2_mixer
+        SDL2_ttf::SDL2_ttf
+    )
+else()
+    # System packages
+    target_link_libraries(meowstro
+        PRIVATE
+        ${SDL2_LIBRARIES}
+        ${SDL2_IMAGE_LIBRARIES}
+        ${SDL2_MIXER_LIBRARIES}
+        ${SDL2_TTF_LIBRARIES}
+    )
+    target_include_directories(meowstro
+        PRIVATE
+        ${SDL2_INCLUDE_DIRS}
+        ${SDL2_IMAGE_INCLUDE_DIRS}
+        ${SDL2_MIXER_INCLUDE_DIRS}
+        ${SDL2_TTF_INCLUDE_DIRS}
+    )
 endif()
 
-# Create the Executable
-set(BIN_NAME meowstro)
-if(DEFINED ENV{GITHUB_ACTIONS})
-    add_definitions(-DCI_BUILD)
-endif()
-cmake_policy(SET CMP0156 NEW)
-add_executable(${BIN_NAME} ${SOURCES} ${HEADERS} "src/AudioLogic.cpp")
+target_include_directories(meowstro PRIVATE include)
 
-# Include Directories
-target_include_directories(${BIN_NAME} PUBLIC include)
-target_include_directories(${BIN_NAME} PUBLIC ${SDL2_INCLUDE_DIR} ${SDL2_IMAGE_INCLUDE_DIR} ${SDL2_MIXER_INCLUDE_DIR} ${SDL2_TTF_INCLUDE_DIR})
-
-# Ensure SDL2main is linked
-target_link_libraries(${BIN_NAME} ${SDL2_LIBRARY} ${SDL2MAIN_LIBRARY} ${SDL2_IMAGE_LIBRARY} ${SDL2_MIXER_LIBRARY} ${SDL2_TTF_LIBRARY})
-
-cmake_policy(SET CMP0112 NEW)
-
-# Move DLLs to the same location as the executable
-add_custom_command(TARGET ${BIN_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${SDL2_DIR}/lib/x64/SDL2.dll"
-        "${SDL2_IMAGE_DIR}/lib/x64/SDL2_image.dll"
-        "${SDL2_MIXER_DIR}/lib/x64/SDL2_mixer.dll"
-        "${SDL2_TTF_DIR}/lib/x64/SDL2_ttf.dll"
-        "$<TARGET_FILE_DIR:${BIN_NAME}>"
+# Copy assets folder to the output directory after build
+add_custom_command(TARGET meowstro POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:meowstro>/assets"
 )
 
-# Explicitly tell Visual Studio that headers belong to the project
-source_group("Header Files" FILES ${HEADERS})
-source_group("Source Files" FILES ${SOURCES})
+# Create a copy of compile_commands.json in the project root for IDE support
+if(CMAKE_EXPORT_COMPILE_COMMANDS)
+    add_custom_target(copy_compile_commands ALL
+        COMMAND ${CMAKE_COMMAND} -Dsrc="${CMAKE_BINARY_DIR}/compile_commands.json" -Ddst="${CMAKE_SOURCE_DIR}/compile_commands.json" -P "${CMAKE_SOURCE_DIR}/cmake/copy_if_exists.cmake"
+        BYPRODUCTS ${CMAKE_SOURCE_DIR}/compile_commands.json
+        DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+        COMMENT "Copying compile_commands.json to project root if it exists"
+        VERBATIM
+    )
+endif()
+
+# ==== TESTING CONFIGURATION ====
+
+# Create a library target for the game logic (without main.cpp)
+# This allows tests to link against game code without the main function
+set(GAME_LIB_SOURCES
+    src/RenderWindow.cpp
+    src/Entity.cpp
+    src/Audio.cpp
+    src/AudioLogic.cpp
+    src/Font.cpp
+    src/Sprite.cpp
+    src/GameStats.cpp
+    src/ResourceManager.cpp
+    src/GameConfig.cpp
+    src/InputHandler.cpp
+    src/GameStateManager.cpp
+    src/RhythmGame.cpp
+    src/MenuSystem.cpp
+    src/AnimationSystem.cpp
+    src/Logger.cpp
+)
+
+set(GAME_LIB_HEADERS
+    include/RenderWindow.hpp
+    include/Entity.hpp
+    include/SDLTexture.hpp
+    include/Audio.hpp
+    include/AudioLogic.hpp
+    include/Font.hpp
+    include/Sprite.hpp
+    include/GameStats.hpp
+    include/ResourceManager.hpp
+    include/GameConfig.hpp
+    include/InputHandler.hpp
+    include/GameStateManager.hpp
+    include/RhythmGame.hpp
+    include/MenuSystem.hpp
+    include/AnimationSystem.hpp
+    include/Logger.hpp
+    include/Exceptions.hpp
+)
+
+add_library(meowstro_lib STATIC ${GAME_LIB_SOURCES} ${GAME_LIB_HEADERS})
+
+# Link libraries to the game library
+if(TARGET SDL2::SDL2)
+    # vcpkg targets
+    target_link_libraries(meowstro_lib
+        PUBLIC
+        SDL2::SDL2
+        SDL2::SDL2main
+        SDL2_image::SDL2_image
+        SDL2_mixer::SDL2_mixer
+        SDL2_ttf::SDL2_ttf
+    )
+else()
+    # System packages
+    target_link_libraries(meowstro_lib
+        PUBLIC
+        ${SDL2_LIBRARIES}
+        ${SDL2_IMAGE_LIBRARIES}
+        ${SDL2_MIXER_LIBRARIES}
+        ${SDL2_TTF_LIBRARIES}
+    )
+    target_include_directories(meowstro_lib
+        PUBLIC
+        ${SDL2_INCLUDE_DIRS}
+        ${SDL2_IMAGE_INCLUDE_DIRS}
+        ${SDL2_MIXER_INCLUDE_DIRS}
+        ${SDL2_TTF_INCLUDE_DIRS}
+    )
+endif()
+
+target_include_directories(meowstro_lib PUBLIC include)
+
+# Update main executable to use the library
+target_link_libraries(meowstro PRIVATE meowstro_lib)
+
+# Test executable
+add_executable(meowstro_tests
+    tests/main.cpp
+    tests/unit/test_GameStats.cpp
+    tests/unit/test_Logger.cpp
+    tests/unit/test_GameConfig.cpp
+    tests/unit/test_Entity.cpp
+    tests/unit/test_Sprite.cpp
+    tests/unit/test_ResourceManager.cpp
+    tests/unit/test_InputHandler.cpp
+)
+
+target_link_libraries(meowstro_tests 
+    PRIVATE 
+    meowstro_lib
+    GTest::gtest
+    GTest::gtest_main
+)
+
+target_include_directories(meowstro_tests PRIVATE include)
+
+# Register tests with CTest
+add_test(NAME unit_tests COMMAND meowstro_tests)

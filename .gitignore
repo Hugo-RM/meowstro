@@ -5,11 +5,20 @@ build/
 .vscode/
 
 # Ignore configuration files that contain user-specific paths
-config.json
+build.ps1
+build.bat
+build.sh
 CMakePresets.json
+config.json
 
 # Ignore log files and system files
 *.log
 *.tmp
 *.swp
-/.vs
+.vs/
+
+# Ignore vcpkg installation directory if local
+vcpkg_installed/
+
+# Ignore compile commands database (it gets copied to root)
+compile_commands.json

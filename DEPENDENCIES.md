@@ -1,0 +1,16 @@
+# Dependency Requirements
+
+This project has been tested with the following dependencies:
+
+## Core Dependencies
+- CMake >= 3.10
+- C++17 compatible compiler
+- SDL2 >= 2.30.0
+- SDL2_image >= 2.8.2
+- SDL2_mixer >= 2.8.0
+- SDL2_ttf >= 2.22.0
+
+## Notes
+- These are the minimum tested versions
+- Newer versions should work fine
+- Older versions may work but are not guaranteed

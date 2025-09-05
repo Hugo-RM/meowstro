@@ -1,0 +1,28 @@
+{
+  "name": "meowstro",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "sdl2",
+      "version>=": "2.30.0"
+    },
+    {
+      "name": "sdl2-image", 
+      "version>=": "2.8.2"
+    },
+    {
+      "name": "sdl2-mixer",
+      "version>=": "2.8.0",
+      "features": ["mpg123"]
+    },
+    {
+      "name": "sdl2-ttf",
+      "version>=": "2.22.0"
+    },
+    {
+      "name": "gtest",
+      "version>=": "1.14.0"
+    }
+  ],
+  "builtin-baseline": "5300a2a461a53b76405db4fcbe6aeb0eea43935d"
+}

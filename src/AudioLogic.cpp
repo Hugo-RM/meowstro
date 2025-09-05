@@ -24,11 +24,11 @@ short int AudioLogic::checkHit(double expectedMs, double actualMs) {
     short int scoreType = 0;
 
     if (delta <= PERFECT_WINDOW_MS) {
-        std::cout << "perfect, Delta: " << delta << std::endl;
+        // std::cout << "perfect, Delta: " << delta << std::endl;
         scoreType = 2;
     }
     else if (delta <= GOOD_WINDOW_MS) {
-        std::cout << "good, Delta: " << delta << std::endl;
+        // std::cout << "good, Delta: " << delta << std::endl;
         scoreType = 1;
     }
 
