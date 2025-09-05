@@ -60,6 +60,7 @@ set(SOURCES
 set(HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
+    include/SDLTexture.hpp
     include/Audio.hpp
     include/AudioLogic.hpp
     include/Font.hpp
@@ -152,6 +153,7 @@ set(GAME_LIB_SOURCES
 set(GAME_LIB_HEADERS
     include/RenderWindow.hpp
     include/Entity.hpp
+    include/SDLTexture.hpp
     include/Audio.hpp
     include/AudioLogic.hpp
     include/Font.hpp
