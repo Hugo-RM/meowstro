@@ -216,6 +216,7 @@ add_executable(meowstro_tests
     tests/unit/test_Sprite.cpp
     tests/unit/test_ResourceManager.cpp
     tests/unit/test_InputHandler.cpp
+    tests/unit/test_AssetLoading.cpp
 )
 
 target_link_libraries(meowstro_tests 

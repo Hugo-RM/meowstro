@@ -22,6 +22,12 @@ public:
     // Manual cleanup (called automatically in destructor)
     void cleanup();
     
+    // Clear texture cache without destroying textures (for state resets)
+    void clearCache();
+    
+    // Validate that a texture pointer is still valid
+    bool isTextureValid(SDL_Texture* texture) const;
+    
     // Validity checking
     bool isValid() const { return m_valid; }
 

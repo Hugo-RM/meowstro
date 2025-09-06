@@ -130,7 +130,7 @@ MenuResult MenuSystem::runEndScreen(RenderWindow& window, ResourceManager& resou
             
             switch (action) {
                 case InputAction::Escape:
-                    return MenuResult::GoToMainMenu;
+                    return MenuResult::QuitGame;
                     
                 case InputAction::Select:
                     // currentOption: 0 = retry, 1 = quit

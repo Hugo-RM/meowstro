@@ -22,7 +22,8 @@ public:
 	// Get raw texture pointer for SDL API calls
 	inline SDL_Texture* getTexture() const
 	{
-		return texture_ ? texture_->get() : nullptr;
+		// Return shared texture if available, otherwise raw texture
+		return texture_ ? texture_->get() : rawTexture_;
 	}
 	// Get shared texture for ownership transfer
 	inline SharedSDLTexture getSharedTexture() const
@@ -37,10 +38,11 @@ public:
 	{
 		texture_ = texture;
 	}
-	// Set texture from raw pointer (creates shared ownership)
+	// Set texture from raw pointer (non-owning reference)
 	inline void setTexture(SDL_Texture* texture)
 	{
-		texture_ = texture ? makeSharedSDLTexture(texture) : nullptr;
+		rawTexture_ = texture;
+		texture_ = nullptr;  // Clear shared texture
 	}
 protected:
 	// Fixed type consistency - use float to match member variables
@@ -55,5 +57,6 @@ protected:
 	float x;
 	float y;
 	SDL_Rect currentFrame;
-	SharedSDLTexture texture_;
+	SharedSDLTexture texture_;       // For owned textures
+	SDL_Texture* rawTexture_;       // For non-owned textures (ResourceManager-owned)
 };
