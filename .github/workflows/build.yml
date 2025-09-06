@@ -86,7 +86,7 @@ jobs:
         run: |
           # Test Release build as well
           cmake --build build --config Release
-          ./build/bin/Release/meowstro_tests.exe
+          ./build/bin/meowstro_tests.exe
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -164,8 +164,9 @@ jobs:
       - name: Build and Test (Release)
         run: |
           # Test Release build as well
-          cmake --build build --config Release
-          ./build/bin/Release/meowstro_tests
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+          cmake --build build
+          ./build/bin/meowstro_tests
 
       - name: Upload Executable Artifact (main branch only)
         if: github.ref == 'refs/heads/main'
@@ -241,7 +242,9 @@ jobs:
       - name: Build and Test (Release)
         run: |
           # Test Release build as well
-          cmake --build build --config Release
+          HOMEBREW_PREFIX=$(brew --prefix)
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_PREFIX_PATH="$HOMEBREW_PREFIX"
+          cmake --build build
           ./build/bin/Release/meowstro_tests
 
       - name: Upload Executable Artifact (main branch only)
