@@ -92,6 +92,10 @@ After building, run the executable:
 
 > The output directory is always `build/bin/Debug` or `build/bin/Release` depending on the build type, on all platforms.
 
+## Known Issues
+
+**Audio Synchronization:** There are known synchronization issues between the audio, game logic, and rendering that can cause the game to feel slow or off. Due to time constraints and other priorities, this issue remains unresolved. I (Hugo) will get back to it as soon as I feel like I have time to do so. This project will be worked on in the future with the goal of making the game good enough.
+
 ## Additional Tools Used in GitHub Actions
 
 - **cppcheck**

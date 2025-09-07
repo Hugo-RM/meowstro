@@ -42,6 +42,7 @@ public:
     
     // Update animation timing (call once per frame)
     void updateTiming();
+    void updateTiming(Uint64 currentTime);
     
     // Hook throwing animation
     void startHookThrow(Sprite& hook, int handX, int handY, int throwDuration);
@@ -69,6 +70,7 @@ public:
     
 private:
     float m_timeCounter;
+    Uint64 m_animationStartTime;  // For absolute time calculations
     
     // Helper methods for sway calculations
     int calculateSway(float timeOffset = 0.0f) const;

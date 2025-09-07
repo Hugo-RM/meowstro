@@ -11,6 +11,9 @@ public:
 	void playBackgroundMusic(const std::string& filePath);
 	void stopBackgroundMusic();
 	bool isValid() const { return m_valid; }
+	
+	// Get precise audio position for beat synchronization
+	double getMusicPositionMs() const;
 
 private:
 	Mix_Music* bgMusic;
