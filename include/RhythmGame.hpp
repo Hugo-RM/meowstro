@@ -54,6 +54,10 @@ private:
     Uint32 m_songStartTime;
     std::vector<bool> m_noteHitFlags;
     
+    // Frame timing for consistent framerates
+    Uint64 m_lastFrameTime;
+    Uint64 m_targetFrameTime;
+    
     // Game entities
     Entity m_ocean;
     Entity m_scoreLabel;
@@ -100,4 +104,7 @@ private:
     
     // Format score helper
     std::string formatScore(int score);
+    
+    // Helper method for precise timing
+    double getCurrentGameTimeMs() const;
 };

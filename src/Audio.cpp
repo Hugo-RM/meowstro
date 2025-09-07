@@ -26,6 +26,21 @@ Audio::~Audio() {
     }
     Mix_CloseAudio();
 }
+
+double Audio::getMusicPositionMs() const {
+    if (!m_valid || !bgMusic || Mix_PlayingMusic() == 0) {
+        return 0.0;
+    }
+    
+    // Try to get precise audio position from SDL_mixer 2.8.0+
+    double positionSeconds = Mix_GetMusicPosition(bgMusic);
+    if (positionSeconds >= 0.0) {
+        return positionSeconds * 1000.0; // Convert to milliseconds
+    }
+    
+    // Fallback: return -1 to indicate SDL_GetTicks should be used
+    return -1.0;
+}
 void Audio::playBackgroundMusic(const std::string& filePath) {
     if (!m_valid) {
         Logger::error("Audio::playBackgroundMusic called on invalid Audio system");

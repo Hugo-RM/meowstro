@@ -12,6 +12,8 @@ RhythmGame::RhythmGame()
     : m_resourceManager(nullptr)
     , m_gameStats(nullptr)
     , m_songStartTime(0)
+    , m_lastFrameTime(0)
+    , m_targetFrameTime(0)
     , m_ocean(0, 0, nullptr)
     , m_scoreLabel(0, 0, nullptr)
     , m_scoreNumber(0, 0, nullptr)
@@ -46,6 +48,10 @@ void RhythmGame::initialize(RenderWindow& window, ResourceManager& resourceManag
     // Initialize timing
     m_songStartTime = SDL_GetTicks();
     m_noteHitFlags.assign(gameplayConfig.numBeats * 2, false);
+    
+    // Initialize frame timing (60 FPS target)
+    m_targetFrameTime = SDL_GetPerformanceFrequency() / 20;
+    m_lastFrameTime = SDL_GetPerformanceCounter();
     
     // Initialize animation system
     m_animationSystem.initialize();
@@ -142,10 +148,11 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
         return false; // Game should end (ESC or window close)
     }
     
-    // Update animation timing
-    m_animationSystem.updateTiming();
+    // Update animation timing with current performance counter
+    Uint64 currentPerformanceTime = SDL_GetPerformanceCounter();
+    m_animationSystem.updateTiming(currentPerformanceTime);
     
-    double currentTime = SDL_GetTicks() - m_songStartTime;
+    double currentTime = getCurrentGameTimeMs();
     
     // Handle rhythm input - simplified logic
     if (action == InputAction::Select) {
@@ -170,8 +177,15 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
             return false;
         }
         
-        // Frame delay (only when no input events)
-        SDL_Delay(visualConfig.frameDelay);
+        // Maintain consistent frame rate (only when no input events)
+        Uint64 currentFrameTime = SDL_GetPerformanceCounter();
+        Uint64 frameTime = currentFrameTime - m_lastFrameTime;
+        
+        if (frameTime < m_targetFrameTime) {
+            Uint32 delayMs = (Uint32)((m_targetFrameTime - frameTime) * 1000 / SDL_GetPerformanceFrequency());
+            SDL_Delay(delayMs);
+        }
+        m_lastFrameTime = SDL_GetPerformanceCounter();
     }
     
     return true; // Continue game
@@ -286,7 +300,7 @@ void RhythmGame::updateFishMovement() {
         }
         
         // Move fish left (same as original)
-        m_fish[i].moveLeft(15);
+        m_fish[i].moveLeft(10);
         
         // Update base position after movement (for sway effects)
         m_fishBasePositions[i].first = m_fish[i].getX();
@@ -369,4 +383,15 @@ std::string RhythmGame::formatScore(int score) {
     std::ostringstream ss;
     ss << std::setw(6) << std::setfill('0') << score;
     return ss.str();
+}
+
+double RhythmGame::getCurrentGameTimeMs() const {
+    // Try to get precise audio position first
+    double audioTimeMs = m_audioPlayer.getMusicPositionMs();
+    if (audioTimeMs >= 0.0) {
+        return audioTimeMs;
+    }
+    
+    // Fallback to SDL_GetTicks timing
+    return SDL_GetTicks() - m_songStartTime;
 }

@@ -4,15 +4,25 @@
 #include <cmath>
 #include <algorithm>
 
-AnimationSystem::AnimationSystem() : m_timeCounter(0.0f) {
+AnimationSystem::AnimationSystem() : m_timeCounter(0.0f), m_animationStartTime(0) {
 }
 
 void AnimationSystem::initialize() {
     m_timeCounter = 0.0f;
+    m_animationStartTime = SDL_GetPerformanceCounter();
 }
 
 void AnimationSystem::updateTiming() {
-    m_timeCounter += 0.05f;
+    // Legacy method - calculate from absolute time
+    Uint64 currentTime = SDL_GetPerformanceCounter();
+    updateTiming(currentTime);
+}
+
+void AnimationSystem::updateTiming(Uint64 currentTime) {
+    // Use absolute time to avoid accumulating errors
+    Uint64 elapsed = currentTime - m_animationStartTime;
+    double elapsedSeconds = (double)elapsed / SDL_GetPerformanceFrequency();
+    m_timeCounter = (float)elapsedSeconds;
 }
 
 void AnimationSystem::startHookThrow(Sprite& hook, int handX, int handY, int throwDuration) {
