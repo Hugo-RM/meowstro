@@ -138,6 +138,7 @@ set(HEADERS
 │   │-- how_to_play.md
 │-- include/               # Header files
 │-- src/                   # Source files
+|-- tests/                 # Test files
 │-- .gitattributes         # Git attributes file
 │-- .gitignore             # Git ignore file
 │-- build.default.bat      # Windows batch default build script
