@@ -23,6 +23,7 @@ public:
         int bpm = 147;
         double travelDuration = 2000.0; // ms before beat to start moving
         std::string backgroundMusicPath = "./assets/audio/meowstro_short_ver.mp3";
+        int musicVolume = 64; // SDL_mixer volume, 0-128 (MIX_MAX_VOLUME)
     };
     
     // Visual settings

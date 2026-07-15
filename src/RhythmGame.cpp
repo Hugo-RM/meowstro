@@ -14,6 +14,7 @@ RhythmGame::RhythmGame()
     , m_songStartTime(0)
     , m_lastFrameTime(0)
     , m_targetFrameTime(0)
+    , m_lastFishFrameTicks(0)
     , m_ocean(0, 0, nullptr)
     , m_scoreLabel(0, 0, nullptr)
     , m_scoreNumber(0, 0, nullptr)
@@ -50,8 +51,9 @@ void RhythmGame::initialize(RenderWindow& window, ResourceManager& resourceManag
     m_noteHitFlags.assign(gameplayConfig.numBeats * 2, false);
     
     // Initialize frame timing (60 FPS target)
-    m_targetFrameTime = SDL_GetPerformanceFrequency() / 20;
+    m_targetFrameTime = SDL_GetPerformanceFrequency() / 60;
     m_lastFrameTime = SDL_GetPerformanceCounter();
+    m_lastFishFrameTicks = SDL_GetTicks();
     
     // Initialize animation system
     m_animationSystem.initialize();
@@ -158,6 +160,9 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
     if (action == InputAction::Select) {
         handleRhythmInput(currentTime);
     }
+    else if (action == InputAction::ToggleMute) {
+        m_audioPlayer.toggleMute();
+    }
     
     // Only do these updates when no specific action is being processed
     // (to avoid duplicate work when processing multiple events per frame)
@@ -170,7 +175,7 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
         
         // Update animations and fish movement
         updateAnimations();
-        updateFishMovement();
+        updateFishMovement(currentTime);
         
         // Check if game should end (music stopped)
         if (Mix_PlayingMusic() == 0) {
@@ -289,31 +294,48 @@ void RhythmGame::updateAnimations() {
     m_animationSystem.updateSwayEffects(m_fish, m_fishBasePositions);
 }
 
-void RhythmGame::updateFishMovement() {
+void RhythmGame::updateFishMovement(double currentTime) {
     const auto& config = GameConfig::getInstance();
     const auto& gameplayConfig = config.getGameplayConfig();
-    
-    // Move fish (only if not hit)
+    const auto& audioConfig = config.getAudioConfig();
+    const std::vector<double>& noteBeats = gameplayConfig.noteBeats;
+
+    // Position each (unhit) fish as a function of the same audio clock used
+    // for hit detection, instead of a fixed pixels-per-frame step. Each fish
+    // starts at fishStartXLocations[i] at (noteBeats[i] - travelDuration) and
+    // reaches fishTargetX exactly at noteBeats[i], regardless of framerate -
+    // this is what keeps the fish visually lined up with the hit windows.
     for (int i = 0; i < gameplayConfig.numBeats; i++) {
         if (m_fishHits.count(i)) {
-            continue; // Skip hit fish
+            continue; // Skip hit fish - stay frozen at hit position
         }
-        
-        // Move fish left (same as original)
-        m_fish[i].moveLeft(10);
-        
-        // Update base position after movement (for sway effects)
-        m_fishBasePositions[i].first = m_fish[i].getX();
-        m_fishBasePositions[i].second = m_fish[i].getY();
+
+        double spawnTime = noteBeats[i] - audioConfig.travelDuration;
+        double progress = (currentTime - spawnTime) / audioConfig.travelDuration;
+        if (progress < 0.0) {
+            progress = 0.0; // Not time to start moving yet
+        }
+
+        double startX = gameplayConfig.fishStartXLocations[i];
+        double x = startX + (gameplayConfig.fishTargetX - startX) * progress;
+
+        m_fish[i].setLoc(static_cast<int>(std::lround(x)), m_fishBasePositions[i].second);
+        m_fishBasePositions[i].first = static_cast<int>(std::lround(x));
     }
-    
-    // Animate fish frames using animation system (for all fish including hit ones)
-    // The animation system will handle the frame updates
-    for (int i = 0; i < gameplayConfig.numBeats; i++) {
-        if (!m_fishHits.count(i)) {
-            m_fish[i]++;
-            if (m_fish[i].getCol() == 4) {
-                m_fish[i].resetFrame();
+
+    // Step the swim-cycle animation frame on a fixed wall-clock cadence so
+    // fin-flap speed doesn't vary with the render framerate.
+    const Uint32 kFishFrameIntervalMs = 120;
+    Uint32 nowTicks = SDL_GetTicks();
+    if (nowTicks - m_lastFishFrameTicks >= kFishFrameIntervalMs) {
+        m_lastFishFrameTicks = nowTicks;
+
+        for (int i = 0; i < gameplayConfig.numBeats; i++) {
+            if (!m_fishHits.count(i)) {
+                m_fish[i]++;
+                if (m_fish[i].getCol() == 4) {
+                    m_fish[i].resetFrame();
+                }
             }
         }
     }

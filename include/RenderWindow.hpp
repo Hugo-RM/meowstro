@@ -15,9 +15,13 @@ public:
 	{
 		return renderer;
 	}
-	
+
 	bool isValid() const { return m_valid; }
-	
+
+	// Toggle between windowed and desktop-fullscreen (borderless)
+	void toggleFullscreen();
+	bool isFullscreen() const;
+
 private:
 	SDL_Window *window;
 	SDL_Renderer *renderer;

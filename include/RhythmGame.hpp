@@ -57,6 +57,10 @@ private:
     // Frame timing for consistent framerates
     Uint64 m_lastFrameTime;
     Uint64 m_targetFrameTime;
+
+    // Wall-clock timer for fish swim-cycle frame stepping (kept independent of
+    // render framerate so the animation speed doesn't vary with FPS)
+    Uint32 m_lastFishFrameTicks;
     
     // Game entities
     Entity m_ocean;
@@ -97,7 +101,7 @@ private:
     void initializeFish();
     void handleRhythmInput(double currentTime);
     void updateAnimations();
-    void updateFishMovement();
+    void updateFishMovement(double currentTime);
     void checkMissedNotes(double currentTime);
     void renderFish(RenderWindow& window, Uint32 currentTicks);
     void updateScore();

@@ -86,7 +86,12 @@ void GameStateManager::runGameplay()
         // Process all SDL events this frame
         while (SDL_PollEvent(&event)) {
             InputAction action = inputHandler.processInput(event, GameState::Playing);
-            
+
+            if (action == InputAction::ToggleFullscreen) {
+                window.toggleFullscreen();
+                continue;
+            }
+
             // Process each action immediately instead of only keeping the last one
             if (action != InputAction::None) {
                 if (!rhythmGame.update(action, inputHandler)) {

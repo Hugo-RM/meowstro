@@ -1,10 +1,11 @@
 #include "Audio.hpp"
+#include "GameConfig.hpp"
 #include "Logger.hpp"
 #include <string>
 #include <iostream>
 
 
-Audio::Audio() : bgMusic(nullptr), m_valid(false) {
+Audio::Audio() : bgMusic(nullptr), m_valid(false), m_muted(false), m_volumeBeforeMute(MIX_MAX_VOLUME) {
     if (SDL_Init(SDL_INIT_AUDIO) < 0) {
         Logger::logSDLError(LogLevel::ERROR, "Failed to initialize SDL audio");
         return;
@@ -71,8 +72,27 @@ void Audio::playBackgroundMusic(const std::string& filePath) {
         bgMusic = nullptr;
         return;
     }
-    
+
+    m_muted = false;
+    m_volumeBeforeMute = GameConfig::getInstance().getAudioConfig().musicVolume;
+    Mix_VolumeMusic(m_volumeBeforeMute);
+
     Logger::info("Started playing background music: " + filePath);
+}
+
+void Audio::toggleMute() {
+    if (!m_valid) {
+        return;
+    }
+
+    if (m_muted) {
+        Mix_VolumeMusic(m_volumeBeforeMute);
+        m_muted = false;
+    } else {
+        m_volumeBeforeMute = Mix_VolumeMusic(-1); // -1 queries current volume without changing it
+        Mix_VolumeMusic(0);
+        m_muted = true;
+    }
 }
 void Audio::stopBackgroundMusic() {
     if (!m_valid) {

@@ -5,10 +5,12 @@
 enum class InputAction {
     None,
     Quit,
-    Select,         // SPACE key
-    MenuUp,         // UP arrow (menu navigation)
-    MenuDown,       // DOWN arrow (menu navigation)
-    Escape          // ESC key
+    Select,             // SPACE key
+    MenuUp,             // UP arrow (menu navigation)
+    MenuDown,           // DOWN arrow (menu navigation)
+    Escape,             // ESC key
+    ToggleFullscreen,   // F11 key (any state)
+    ToggleMute          // M key (gameplay only)
 };
 
 enum class GameState {

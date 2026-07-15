@@ -23,6 +23,13 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags)
 	}
 	
 	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
+
+	// All game/UI code positions entities in a fixed w x h coordinate space.
+	// Locking the renderer's logical size to that same space means resizing
+	// the window or entering fullscreen scales everything (with letterboxing
+	// to preserve aspect ratio) instead of clipping or misaligning content.
+	SDL_RenderSetLogicalSize(renderer, w, h);
+
 	m_valid = true;
 }
 void RenderWindow::clear()
@@ -57,6 +64,26 @@ void RenderWindow::display()
 {
 	if (m_valid && renderer) {
 		SDL_RenderPresent(renderer);
+	}
+}
+
+bool RenderWindow::isFullscreen() const
+{
+	if (!window) {
+		return false;
+	}
+	return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0;
+}
+
+void RenderWindow::toggleFullscreen()
+{
+	if (!window) {
+		return;
+	}
+
+	Uint32 flag = isFullscreen() ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP;
+	if (SDL_SetWindowFullscreen(window, flag) != 0) {
+		Logger::logSDLError(LogLevel::ERROR, "Failed to toggle fullscreen");
 	}
 }
 

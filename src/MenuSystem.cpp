@@ -56,13 +56,17 @@ MenuResult MenuSystem::runMainMenu(RenderWindow& window, ResourceManager& resour
                 case InputAction::MenuDown:
                     handleMenuNavigation(action, 2); // 2 options: start/quit
                     break;
-                    
+
+                case InputAction::ToggleFullscreen:
+                    window.toggleFullscreen();
+                    break;
+
                 case InputAction::None:
                 default:
                     break;
             }
         }
-        
+
         // Update selector position
         updateSelectorPosition(selectCat, MenuType::MainMenu);
         
@@ -144,13 +148,17 @@ MenuResult MenuSystem::runEndScreen(RenderWindow& window, ResourceManager& resou
                 case InputAction::MenuDown:
                     handleMenuNavigation(action, 2); // 2 options: retry/quit
                     break;
-                    
+
+                case InputAction::ToggleFullscreen:
+                    window.toggleFullscreen();
+                    break;
+
                 case InputAction::None:
                 default:
                     break;
             }
         }
-        
+
         // Update selector position
         updateSelectorPosition(selectCat, MenuType::EndScreen);
         

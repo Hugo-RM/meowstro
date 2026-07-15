@@ -12,7 +12,12 @@ InputAction InputHandler::processInput(SDL_Event& event, GameState currentState)
     if (event.type == SDL_QUIT) {
         return InputAction::Quit;
     }
-    
+
+    // Fullscreen toggle is available in any state
+    if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_F11) {
+        return InputAction::ToggleFullscreen;
+    }
+
     // Delegate to appropriate state handler
     switch (currentState) {
         case GameState::MainMenu:
@@ -68,6 +73,8 @@ InputAction InputHandler::processGameInput(const SDL_Event& event)
                     return InputAction::Select;
                 }
                 break; // Ignore repeated key events from holding
+            case SDLK_m:
+                return InputAction::ToggleMute;
             default:
                 break;
         }
