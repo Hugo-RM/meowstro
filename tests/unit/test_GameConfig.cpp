@@ -29,7 +29,7 @@ TEST_F(GameConfigTest, WindowConfigDefaults) {
     EXPECT_STREQ(windowConfig.title, "Meowstro");
     EXPECT_EQ(windowConfig.width, 1920);
     EXPECT_EQ(windowConfig.height, 1080);
-    EXPECT_EQ(windowConfig.flags, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+    EXPECT_EQ(windowConfig.flags, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
 }
 
 // Test AudioConfig default values

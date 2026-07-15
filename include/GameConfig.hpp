@@ -15,7 +15,11 @@ public:
         const char *title = "Meowstro";
         int width = 1920;
         int height = 1080;
-        Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
+        // SDL_WINDOW_ALLOW_HIGHDPI avoids a blurry/mis-scaled window on
+        // Retina/HiDPI displays; paired with RenderWindow's
+        // SDL_RenderSetLogicalSize so the fixed-pixel UI layout still scales
+        // correctly regardless of the display's actual pixel density.
+        Uint32 flags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
     };
     
     // Audio and timing settings
