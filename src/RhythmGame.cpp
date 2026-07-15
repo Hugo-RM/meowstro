@@ -310,14 +310,8 @@ void RhythmGame::updateFishMovement(double currentTime) {
             continue; // Skip hit fish - stay frozen at hit position
         }
 
-        double spawnTime = noteBeats[i] - audioConfig.travelDuration;
-        double progress = (currentTime - spawnTime) / audioConfig.travelDuration;
-        if (progress < 0.0) {
-            progress = 0.0; // Not time to start moving yet
-        }
-
-        double startX = gameplayConfig.fishStartXLocations[i];
-        double x = startX + (gameplayConfig.fishTargetX - startX) * progress;
+        double x = AudioLogic::interpolatePosition(currentTime, noteBeats[i], audioConfig.travelDuration,
+                                                    gameplayConfig.fishStartXLocations[i], gameplayConfig.fishTargetX);
 
         m_fish[i].setLoc(static_cast<int>(std::lround(x)), m_fishBasePositions[i].second);
         m_fishBasePositions[i].first = static_cast<int>(std::lround(x));

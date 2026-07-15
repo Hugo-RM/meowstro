@@ -16,6 +16,14 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags)
 	renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 	if (renderer == nullptr)
 	{
+		// Not every machine has a GPU-accelerated render driver available
+		// (VMs, remote desktops, some Linux setups) - fall back to software
+		// rendering rather than refusing to launch at all.
+		Logger::logSDLError(LogLevel::WARNING, "Accelerated renderer unavailable, falling back to software rendering");
+		renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+	}
+	if (renderer == nullptr)
+	{
 		Logger::logSDLError(LogLevel::ERROR, "Failed to create renderer");
 		SDL_DestroyWindow(window);
 		window = nullptr;

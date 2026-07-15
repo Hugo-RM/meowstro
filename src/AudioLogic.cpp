@@ -38,3 +38,17 @@ short int AudioLogic::checkHit(double expectedMs, double actualMs) {
 double AudioLogic::msFromMscs(int minutes, int seconds, int centiseconds) {
     return (minutes * 60000.0) + (seconds * 1000.0) + (centiseconds * 10.0);
 }
+
+double AudioLogic::interpolatePosition(double currentTimeMs, double beatMs, double travelDurationMs, double startX, double targetX) {
+    if (travelDurationMs <= 0.0) {
+        return targetX;
+    }
+
+    double spawnTimeMs = beatMs - travelDurationMs;
+    double progress = (currentTimeMs - spawnTimeMs) / travelDurationMs;
+    if (progress < 0.0) {
+        progress = 0.0;
+    }
+
+    return startX + (targetX - startX) * progress;
+}
