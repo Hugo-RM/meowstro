@@ -146,30 +146,11 @@ void ResourceManager::clearCache() {
 }
 
 bool ResourceManager::isTextureValid(SDL_Texture* texture) const {
-    if (!texture) {
-        return false;
-    }
-
-    return true;
-    
-    // In Release builds, SDL_QueryTexture might behave differently
-    // For now, assume all non-null textures are valid to avoid cache invalidation
-    // This is safe because ResourceManager owns the textures and only destroys them in cleanup()
-    
-    /* Original validation code - disabled due to Release build issues
-    // Try to query the texture - if it's been destroyed, this will fail
-    int w, h;
-    Uint32 format;
-    int access;
-    int result = SDL_QueryTexture(texture, &format, &access, &w, &h);
-    
-    if (result != 0) {
-        Logger::warning("Texture validation failed: " + std::string(SDL_GetError()));
-        return false;
-    }
-    
-    return true;
-    */
+    // ResourceManager exclusively owns every texture it hands out and only
+    // destroys them in cleanup()/clearCache(), so a non-null pointer here is
+    // always safe to use - SDL_QueryTexture-based validation isn't needed
+    // and was unreliable in Release builds.
+    return texture != nullptr;
 }
 
 std::string ResourceManager::generateFontKey(const std::string& fontPath, int fontSize) const {

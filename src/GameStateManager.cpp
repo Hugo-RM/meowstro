@@ -118,9 +118,9 @@ void GameStateManager::runGameplay()
     
     // Clean up rhythm game resources (stop music, etc.)
     rhythmGame.cleanup();
-    
-    // Logger::logObject(LogLevel::INFO, gameStats); I need to update the formatting of cout gamestats
-    
+
+    Logger::logObject(LogLevel::INFO, gameStats);
+
     transitionTo(GameState::EndScreen);
 }
 

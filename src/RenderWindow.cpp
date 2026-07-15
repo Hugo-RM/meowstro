@@ -32,6 +32,10 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags)
 	
 	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
 
+	// Keep the window from being shrunk small enough that letterboxed
+	// content becomes illegibly tiny.
+	SDL_SetWindowMinimumSize(window, w / 4, h / 4);
+
 	// All game/UI code positions entities in a fixed w x h coordinate space.
 	// Locking the renderer's logical size to that same space means resizing
 	// the window or entering fullscreen scales everything (with letterboxing

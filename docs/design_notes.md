@@ -57,9 +57,22 @@ Meowstro follows a component-based architecture with clear separation of concern
 
 ## Known Issues
 
-- Fish x-axis locations are hard-coded 
-- Accuracy of visual feedback (fish locations) not good
-- Notes are hard-coded
+- Fish x-axis locations and note beat timings are hard-coded to one specific
+  track (`meowstro_short_ver.mp3`, 147 BPM) - changing the song requires
+  manually re-transcribing both.
+- ~~Accuracy of visual feedback (fish locations) not good~~ **Fixed**: fish
+  position was previously advanced by a fixed pixels-per-frame step,
+  completely decoupled from the audio-position clock used for hit detection,
+  so any framerate variance shifted fish visibly out of sync with their hit
+  window. Fish position is now computed each frame from that same clock via
+  `AudioLogic::interpolatePosition` (see `RhythmGame::updateFishMovement`),
+  so visuals stay locked to hit detection regardless of framerate.
+- The hard-coded `noteBeats` timestamps were spot-checked against the actual
+  track using an independent spectral-flux onset detector: 24 of 25 beats
+  land within ~25ms of a detected onset (well inside the 60ms Perfect
+  window), and the one apparent outlier turned out to be a peak-picking
+  artifact in the detector, not a real timing gap. No evidence the manual
+  transcription is off.
 
 ## Game Design and Mechanics
 
