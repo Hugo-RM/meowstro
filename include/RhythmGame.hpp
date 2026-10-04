@@ -53,6 +53,13 @@ private:
     // Game timing
     Uint32 m_songStartTime;
     std::vector<bool> m_noteHitFlags;
+
+    // Offset (audio time - wall-clock time) applied to the steady
+    // SDL_GetTicks()-based wall clock to approximate the audio position,
+    // smoothed against Mix_GetMusicPosition() readings so a single glitchy
+    // reading (e.g. from a CPU-starved audio thread) can't snap fish
+    // position or hit judgment - see AudioLogic::smoothAudioClockOffset.
+    double m_audioClockOffsetMs;
     
     // Frame timing for consistent framerates
     Uint64 m_lastFrameTime;
@@ -105,6 +112,8 @@ private:
     void checkMissedNotes(double currentTime);
     void renderFish(RenderWindow& window, Uint32 currentTicks);
     void updateScore();
+    void updateAudioClock();
+    void logFrameTimingDiagnostics(Uint64 frameTimePerfCounterTicks);
     
     // Format score helper
     std::string formatScore(int score);

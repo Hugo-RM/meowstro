@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include "RenderWindow.hpp"
 #include "Logger.hpp"
 
@@ -29,7 +30,14 @@ RenderWindow::RenderWindow(const char *title, int w, int h, Uint32 windowFlags)
 		window = nullptr;
 		return;
 	}
-	
+
+	SDL_RendererInfo rendererInfo;
+	if (SDL_GetRendererInfo(renderer, &rendererInfo) == 0) {
+		bool accelerated = (rendererInfo.flags & SDL_RENDERER_ACCELERATED) != 0;
+		Logger::info(std::string("Renderer created: ") + rendererInfo.name +
+		             (accelerated ? " (hardware-accelerated)" : " (software - expect higher CPU usage)"));
+	}
+
 	SDL_SetRenderDrawColor(renderer, 100, 115, 180, 185);
 
 	// Keep the window from being shrunk small enough that letterboxed

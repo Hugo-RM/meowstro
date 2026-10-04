@@ -94,3 +94,32 @@ TEST_F(AudioLogicTest, InterpolatePositionZeroTravelDurationReturnsTarget) {
     double x = AudioLogic::interpolatePosition(1000.0, 1000.0, 0.0, 1000.0, 100.0);
     EXPECT_DOUBLE_EQ(x, 100.0);
 }
+
+// --- Audio clock smoothing (glitch rejection) ---
+
+TEST_F(AudioLogicTest, SmoothAudioClockOffsetConvergesTowardTrueOffset) {
+    // wallClock=1000, audio reports 1050 -> true offset is +50
+    double offset = 0.0;
+    for (int i = 0; i < 30; ++i) {
+        offset = AudioLogic::smoothAudioClockOffset(offset, 1000.0, 1050.0, 250.0, 0.15);
+    }
+    EXPECT_NEAR(offset, 50.0, 0.5);
+}
+
+TEST_F(AudioLogicTest, SmoothAudioClockOffsetRejectsSingleFrameGlitch) {
+    // Offset has settled at +50; one frame reports a wildly different
+    // position (e.g. a decoder hiccup under CPU load) - it should be
+    // rejected outright rather than snapping the offset.
+    double settledOffset = 50.0;
+    double glitchedAudioMs = 1000.0 + 50.0 + 5000.0; // implies offset jumping to +5050
+    double result = AudioLogic::smoothAudioClockOffset(settledOffset, 1000.0, glitchedAudioMs, 250.0, 0.15);
+    EXPECT_DOUBLE_EQ(result, settledOffset);
+}
+
+TEST_F(AudioLogicTest, SmoothAudioClockOffsetAcceptsSmallDriftWithinJumpLimit) {
+    double settledOffset = 50.0;
+    double driftedAudioMs = 1000.0 + 50.0 + 40.0; // implies offset moving to +90, within maxJumpMs
+    double result = AudioLogic::smoothAudioClockOffset(settledOffset, 1000.0, driftedAudioMs, 250.0, 0.15);
+    EXPECT_GT(result, settledOffset);
+    EXPECT_LT(result, 90.0);
+}

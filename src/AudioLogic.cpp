@@ -52,3 +52,15 @@ double AudioLogic::interpolatePosition(double currentTimeMs, double beatMs, doub
 
     return startX + (targetX - startX) * progress;
 }
+
+double AudioLogic::smoothAudioClockOffset(double currentOffsetMs, double wallClockMs, double audioReportedMs,
+                                           double maxJumpMs, double smoothingFactor) {
+    double impliedOffset = audioReportedMs - wallClockMs;
+    double delta = impliedOffset - currentOffsetMs;
+
+    if (fabs(delta) > maxJumpMs) {
+        return currentOffsetMs; // Outlier reading (e.g. audio glitch) - hold steady
+    }
+
+    return currentOffsetMs + delta * smoothingFactor;
+}

@@ -1,5 +1,6 @@
 #include "RhythmGame.hpp"
 #include "GameConfig.hpp"
+#include "Logger.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -12,6 +13,7 @@ RhythmGame::RhythmGame()
     : m_resourceManager(nullptr)
     , m_gameStats(nullptr)
     , m_songStartTime(0)
+    , m_audioClockOffsetMs(0.0)
     , m_lastFrameTime(0)
     , m_targetFrameTime(0)
     , m_lastFishFrameTicks(0)
@@ -48,6 +50,7 @@ void RhythmGame::initialize(RenderWindow& window, ResourceManager& resourceManag
     
     // Initialize timing
     m_songStartTime = SDL_GetTicks();
+    m_audioClockOffsetMs = 0.0;
     m_noteHitFlags.assign(gameplayConfig.numBeats * 2, false);
     
     // Initialize frame timing (60 FPS target)
@@ -153,7 +156,8 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
     // Update animation timing with current performance counter
     Uint64 currentPerformanceTime = SDL_GetPerformanceCounter();
     m_animationSystem.updateTiming(currentPerformanceTime);
-    
+
+    updateAudioClock();
     double currentTime = getCurrentGameTimeMs();
     
     // Handle rhythm input - simplified logic
@@ -185,7 +189,9 @@ bool RhythmGame::update(InputAction action, InputHandler& inputHandler) {
         // Maintain consistent frame rate (only when no input events)
         Uint64 currentFrameTime = SDL_GetPerformanceCounter();
         Uint64 frameTime = currentFrameTime - m_lastFrameTime;
-        
+
+        logFrameTimingDiagnostics(frameTime);
+
         if (frameTime < m_targetFrameTime) {
             Uint32 delayMs = (Uint32)((m_targetFrameTime - frameTime) * 1000 / SDL_GetPerformanceFrequency());
             SDL_Delay(delayMs);
@@ -401,13 +407,49 @@ std::string RhythmGame::formatScore(int score) {
     return ss.str();
 }
 
-double RhythmGame::getCurrentGameTimeMs() const {
-    // Try to get precise audio position first
-    double audioTimeMs = m_audioPlayer.getMusicPositionMs();
-    if (audioTimeMs >= 0.0) {
-        return audioTimeMs;
+void RhythmGame::logFrameTimingDiagnostics(Uint64 frameTimePerfCounterTicks) {
+    static Uint64 frameCount = 0;
+    static Uint64 accumulatedTicks = 0;
+    static Uint64 busyFrameCount = 0; // Frames with no spare time before the delay - a sign of CPU-bound rendering
+
+    frameCount++;
+    accumulatedTicks += frameTimePerfCounterTicks;
+    if (frameTimePerfCounterTicks >= m_targetFrameTime) {
+        busyFrameCount++;
     }
-    
-    // Fallback to SDL_GetTicks timing
-    return SDL_GetTicks() - m_songStartTime;
+
+    const Uint64 kReportEveryFrames = 180; // ~3s at the 60 FPS target
+    if (frameCount < kReportEveryFrames) {
+        return;
+    }
+
+    double avgFrameMs = (static_cast<double>(accumulatedTicks) / frameCount) * 1000.0 / SDL_GetPerformanceFrequency();
+    double busyPct = 100.0 * static_cast<double>(busyFrameCount) / frameCount;
+
+    std::ostringstream ss;
+    ss << "Frame timing: avg " << std::fixed << std::setprecision(2) << avgFrameMs << "ms/frame ("
+       << std::setprecision(1) << (1000.0 / avgFrameMs) << " fps), " << std::setprecision(1) << busyPct
+       << "% of frames had no spare time to delay (high % here means CPU-bound, which can starve audio)";
+    Logger::info(ss.str());
+
+    frameCount = 0;
+    accumulatedTicks = 0;
+    busyFrameCount = 0;
+}
+
+void RhythmGame::updateAudioClock() {
+    double wallClockMs = static_cast<double>(SDL_GetTicks() - m_songStartTime);
+    double audioReportedMs = m_audioPlayer.getMusicPositionMs();
+
+    if (audioReportedMs >= 0.0) {
+        // maxJumpMs=250, smoothingFactor=0.15: converges to the real audio
+        // position within about a second, but a single glitchy reading
+        // (e.g. Mix_GetMusicPosition hiccuping under CPU load) can't snap
+        // the timeline - see AudioLogic::smoothAudioClockOffset.
+        m_audioClockOffsetMs = AudioLogic::smoothAudioClockOffset(m_audioClockOffsetMs, wallClockMs, audioReportedMs, 250.0, 0.15);
+    }
+}
+
+double RhythmGame::getCurrentGameTimeMs() const {
+    return static_cast<double>(SDL_GetTicks() - m_songStartTime) + m_audioClockOffsetMs;
 }
